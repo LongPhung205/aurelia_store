@@ -23,6 +23,7 @@ class UpdateCategoryRequest extends FormRequest
             ],
             'parent_id' => 'nullable|exists:categories,id',
             'is_active' => 'boolean',
+            'image' => 'nullable|image|max:2048',
         ];
     }
 }

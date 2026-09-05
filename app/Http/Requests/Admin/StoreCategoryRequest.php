@@ -18,6 +18,7 @@ class StoreCategoryRequest extends FormRequest
             'slug' => 'nullable|string|max:255|unique:categories,slug',
             'parent_id' => 'nullable|exists:categories,id',
             'is_active' => 'boolean',
+            'image' => 'nullable|image|max:2048',
         ];
     }
 }

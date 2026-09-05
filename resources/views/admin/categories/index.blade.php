@@ -39,6 +39,7 @@
             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 sticky top-0 z-10 shadow-[0_1px_2px_rgba(0,0,0,0.1)]">
                 <tr>
                     <th scope="col" class="px-6 py-3 font-semibold">ID</th>
+                    <th scope="col" class="px-6 py-3 font-semibold text-center">Ảnh</th>
                     <th scope="col" class="px-6 py-3 font-semibold">Tên danh mục</th>
                     <th scope="col" class="px-6 py-3 font-semibold">Đường dẫn (Slug)</th>
                     <th scope="col" class="px-6 py-3 font-semibold text-center">Trạng thái</th>
@@ -68,7 +69,7 @@
 
 <!-- Modal Thêm Danh Mục -->
 <x-admin.modal id="createModal" title="Thêm Danh Mục Mới">
-    <form action="{{ route('admin.categories.store') }}" method="POST">
+    <form action="{{ route('admin.categories.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         
         <div class="mb-4">
@@ -82,6 +83,11 @@
                     <option value="{{ $parent->id }}">{{ $parent->name }}</option>
                 @endforeach
             </x-admin.select>
+        </div>
+        
+        <div class="mb-4">
+            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Ảnh danh mục (Tùy chọn)</label>
+            <input type="file" name="image" accept="image/*" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
         </div>
         
         <div class="mb-4">

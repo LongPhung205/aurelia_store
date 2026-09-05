@@ -44,7 +44,16 @@ class HomeController extends Controller
         if (auth()->check()) {
             $wishlistedProductIds = auth()->user()->wishlists()->pluck('product_id')->toArray();
         }
+        
+        // 6. Lấy các danh mục Mức 2 (đồng cấp, không lấy sâu hơn)
+        $homeCategories = Category::whereNotNull('parent_id')
+            ->whereHas('parent', function ($query) {
+                $query->whereNull('parent_id');
+            })
+            ->where('is_active', true)
+            ->take(6)
+            ->get();
 
-        return view('client.home.index', compact('flashSale', 'banners', 'featuredProducts', 'collections', 'wishlistedProductIds'));
+        return view('client.home.index', compact('flashSale', 'banners', 'featuredProducts', 'collections', 'wishlistedProductIds', 'homeCategories'));
     }
 }

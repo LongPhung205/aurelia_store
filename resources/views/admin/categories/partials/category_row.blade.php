@@ -5,6 +5,15 @@
 @endphp
 <tr class="{{ $level > 0 ? 'hidden children-of-' . $category->parent_id : '' }} bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 category-row" data-id="{{ $category->id }}" data-parent="{{ $category->parent_id }}">
     <td class="px-6 py-4 font-mono text-xs text-gray-500 dark:text-gray-400">#{{ $category->id }}</td>
+    <td class="px-6 py-4 text-center">
+        @if($category->image)
+            <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="w-10 h-10 object-cover rounded mx-auto border border-gray-200">
+        @else
+            <div class="w-10 h-10 bg-gray-100 rounded flex items-center justify-center mx-auto text-gray-400 border border-gray-200">
+                <i class="bi bi-image"></i>
+            </div>
+        @endif
+    </td>
     <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white" style="padding-left: {{ 1.5 + $padding }}rem !important;">
         @if($hasChildren)
             <button class="inline-flex items-center justify-center p-0 mr-1 text-gray-900 bg-transparent hover:text-blue-600 dark:text-white dark:hover:text-blue-500 btn-toggle-children focus:outline-none" data-id="{{ $category->id }}">
@@ -42,7 +51,7 @@
 
 <!-- Modal Edit cho từng danh mục -->
 <x-admin.modal id="editModal{{ $category->id }}" title="Chỉnh sửa Danh Mục">
-    <form action="{{ route('admin.categories.update', $category->id) }}" method="POST">
+    <form action="{{ route('admin.categories.update', $category->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
         
@@ -57,6 +66,17 @@
                     <option value="{{ $parent->id }}" {{ $category->parent_id == $parent->id ? 'selected' : '' }}>{{ $parent->name }}</option>
                 @endforeach
             </x-admin.select>
+        </div>
+        
+        <div class="mb-4">
+            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Ảnh danh mục (Tùy chọn)</label>
+            @if($category->image)
+                <div class="mb-2">
+                    <img src="{{ Storage::url($category->image) }}" alt="Current Image" class="h-20 w-20 object-cover rounded border border-gray-200">
+                </div>
+            @endif
+            <input type="file" name="image" accept="image/*" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+            <p class="mt-1 text-xs text-gray-500">Để trống nếu không muốn thay đổi ảnh.</p>
         </div>
         
         <div class="mb-4">

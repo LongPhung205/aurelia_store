@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Http\Requests\Admin\StoreCategoryRequest;
 use App\Http\Requests\Admin\UpdateCategoryRequest;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class CategoryController extends Controller
 {
@@ -29,6 +30,11 @@ class CategoryController extends Controller
         if (empty($data['slug'])) {
             $data['slug'] = Str::slug($data['name']);
         }
+        
+        if ($request->hasFile('image')) {
+            $data['image'] = $request->file('image')->store('categories', 'public');
+        }
+        
         Category::create($data);
         return redirect()->route('admin.categories.index')->with('success', 'Category created.');
     }
@@ -50,6 +56,14 @@ class CategoryController extends Controller
         if (empty($data['slug'])) {
             $data['slug'] = Str::slug($data['name']);
         }
+        
+        if ($request->hasFile('image')) {
+            if ($category->image) {
+                Storage::disk('public')->delete($category->image);
+            }
+            $data['image'] = $request->file('image')->store('categories', 'public');
+        }
+        
         $category->update($data);
         return redirect()->route('admin.categories.index')->with('success', 'Category updated.');
     }

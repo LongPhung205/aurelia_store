@@ -36,6 +36,29 @@
 @endsection
 
 @section('content')
+
+<!-- Danh mục mức 2 -->
+@if(isset($homeCategories) && $homeCategories->count() > 0)
+<section class="mb-12 mt-8">
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        @foreach($homeCategories as $category)
+        <a href="#" class="group bg-gray-50 rounded flex items-center justify-between p-4 md:p-6 hover:shadow-md transition-shadow">
+            <span class="font-bold text-gray-800 uppercase tracking-wide group-hover:text-brand transition-colors">{{ $category->name }}</span>
+            <div class="w-16 h-16 md:w-20 md:h-20 shrink-0">
+                @if($category->image)
+                    <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform">
+                @else
+                    <div class="w-full h-full bg-gray-200 rounded-full flex items-center justify-center text-gray-400">
+                        <i class="bi bi-image text-xl"></i>
+                    </div>
+                @endif
+            </div>
+        </a>
+        @endforeach
+    </div>
+</section>
+@endif
+
 <!-- Flash Sale Section -->
 @if($flashSale)
 <section class="mb-16 p-4 md:p-6 rounded-2xl shadow-lg" style="background-color: #FF78AE;">
@@ -182,9 +205,9 @@
                      class="absolute inset-0 w-full h-full object-fill z-10 pointer-events-none"
                      style="mix-blend-mode: multiply;">
 
-                <div class="relative w-full h-full p-8 bg-white z-0 overflow-hidden">
+                <div class="relative w-full h-full p-2 bg-white z-0 overflow-hidden">
                     <a href="{{ route('products.show', $product->slug) }}" class="block w-full h-full">
-                        <img :src="activeImage" alt="{{ $product->name }}" class="w-full h-full object-contain rounded group-hover:scale-105 transition-transform duration-500 bg-white">
+                        <img :src="activeImage" alt="{{ $product->name }}" class="w-full h-full object-cover rounded group-hover:scale-105 transition-transform duration-500 bg-white">
                     </a>
                 </div>
                 
@@ -406,9 +429,9 @@
                      class="absolute inset-0 w-full h-full object-fill z-10 pointer-events-none"
                      style="mix-blend-mode: multiply;">
 
-                <div class="relative w-full h-full p-8 bg-white z-0 overflow-hidden">
+                <div class="relative w-full h-full p-2 bg-white z-0 overflow-hidden">
                     <a href="{{ route('products.show', $product->slug) }}" class="block w-full h-full">
-                        <img :src="activeImage" alt="{{ $product->name }}" class="w-full h-full object-contain rounded group-hover:scale-105 transition-transform duration-500 bg-white">
+                        <img :src="activeImage" alt="{{ $product->name }}" class="w-full h-full object-cover rounded group-hover:scale-105 transition-transform duration-500 bg-white">
                     </a>
                 </div>
                 
