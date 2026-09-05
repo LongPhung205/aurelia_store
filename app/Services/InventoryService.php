@@ -28,15 +28,15 @@ class InventoryService
                     continue; // Variant might have been deleted, skip or throw error depending on business logic
                 }
 
-                if ($variant->stock < $item->quantity) {
-                    throw new Exception("Sản phẩm {$item->product_name} không đủ tồn kho (Còn lại: {$variant->stock}, Cần: {$item->quantity}).");
+                if ($variant->stock_quantity < $item->quantity) {
+                    throw new Exception("Sản phẩm {$item->product_name} không đủ tồn kho (Còn lại: {$variant->stock_quantity}, Cần: {$item->quantity}).");
                 }
 
-                $stockBefore = $variant->stock;
+                $stockBefore = $variant->stock_quantity;
                 $stockAfter = $stockBefore - $item->quantity;
 
                 // Update variant stock
-                $variant->update(['stock' => $stockAfter]);
+                $variant->update(['stock_quantity' => $stockAfter]);
 
                 // Record history
                 InventoryHistory::create([
@@ -81,11 +81,11 @@ class InventoryService
                     continue;
                 }
 
-                $stockBefore = $variant->stock;
+                $stockBefore = $variant->stock_quantity;
                 $stockAfter = $stockBefore + $item->quantity;
 
                 // Update variant stock
-                $variant->update(['stock' => $stockAfter]);
+                $variant->update(['stock_quantity' => $stockAfter]);
 
                 // Record history
                 InventoryHistory::create([

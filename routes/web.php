@@ -20,6 +20,10 @@ Route::prefix('cart')->name('cart.')->group(function () {
     Route::delete('/remove', [Client\CartController::class, 'remove'])->name('remove');
 });
 
+// Posts
+Route::get('/posts', [\App\Http\Controllers\Client\PostController::class, 'index'])->name('posts.index');
+Route::get('/{slug}-p{id}.html', [\App\Http\Controllers\Client\PostController::class, 'show'])->name('posts.show');
+
 // Checkout Routes
 Route::prefix('checkout')->name('checkout.')->group(function () {
     Route::post('/apply-coupon', [Client\CheckoutController::class, 'applyCoupon'])->name('apply_coupon');
@@ -118,6 +122,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     
     // User & Role Routes
     Route::resource('users', Admin\UserController::class);
+
+    // Posts (Lookbook/Tạp chí)
+    Route::resource('posts', Admin\PostController::class);
 });
 
 require __DIR__.'/auth.php';

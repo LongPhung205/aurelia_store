@@ -65,6 +65,8 @@
                                 <div class="font-medium text-gray-900 dark:text-white">
                                     @if($history->reference && get_class($history->reference) == 'App\Models\Import')
                                         Mã: <a href="{{ route('admin.imports.show', $history->reference_id) }}" class="text-blue-600 hover:underline font-mono" title="Xem phiếu nhập">{{ $history->reference->code }}</a>
+                                    @elseif($history->reference && get_class($history->reference) == 'App\Models\Order')
+                                        Mã đơn: <a href="{{ route('admin.orders.show', $history->reference_id) }}" class="text-blue-600 hover:underline font-mono" title="Xem đơn hàng">ORD-{{ $history->reference_id }}</a>
                                     @elseif($history->reference)
                                         Mã: <span class="font-mono">{{ $history->reference->code ?? $history->reference_id }}</span>
                                     @else

@@ -323,9 +323,15 @@
                                     <select name="status" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white text-sm focus:ring-primary-500 focus:border-primary-500">
                                         @php
                                             $adminStatuses = ['pending', 'processing', 'ready_to_pick', 'shipping', 'completed'];
+                                            $currentLevel = array_search($order->status, $adminStatuses);
                                         @endphp
-                                        @foreach($adminStatuses as $val)
-                                            <option value="{{ $val }}" {{ $order->status == $val ? 'selected' : '' }}>{{ $statusLabels[$val] }}</option>
+                                        @foreach($adminStatuses as $index => $val)
+                                            @php
+                                                $disabled = ($currentLevel >= 3 && $index < $currentLevel) ? 'disabled' : '';
+                                            @endphp
+                                            <option value="{{ $val }}" {{ $order->status == $val ? 'selected' : '' }} {{ $disabled }}>
+                                                {{ $statusLabels[$val] }}
+                                            </option>
                                         @endforeach
                                     </select>
                                 </div>

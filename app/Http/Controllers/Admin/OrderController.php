@@ -95,6 +95,20 @@ class OrderController extends Controller
             'status' => 'required|in:pending,processing,ready_to_pick,shipping,completed,cancelled'
         ]);
 
+        $levels = [
+            'pending' => 1,
+            'processing' => 2,
+            'ready_to_pick' => 3,
+            'shipping' => 4,
+            'completed' => 5,
+            'cancelled' => 6
+        ];
+
+        // Prevent reversing from shipping or completed to an earlier state
+        if ($levels[$order->status] >= 4 && $levels[$request->status] < $levels[$order->status]) {
+            return redirect()->back()->with('error', 'Không thể lùi trạng thái đơn hàng khi đã ở mức Đang giao hoặc Hoàn thành.');
+        }
+
         try {
             if (in_array($request->status, ['shipping', 'completed'])) {
                 $inventoryService->deductForOrder($order);

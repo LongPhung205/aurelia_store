@@ -54,6 +54,13 @@ class HomeController extends Controller
             ->take(6)
             ->get();
 
-        return view('client.home.index', compact('flashSale', 'banners', 'featuredProducts', 'collections', 'wishlistedProductIds', 'homeCategories'));
+        // 7. Lấy Tạp chí / Lookbook mới nhất
+        $lookbooks = \App\Models\Post::where('is_active', true)
+            ->whereNotNull('published_at')
+            ->latest('published_at')
+            ->take(4)
+            ->get();
+
+        return view('client.home.index', compact('flashSale', 'banners', 'featuredProducts', 'collections', 'wishlistedProductIds', 'homeCategories', 'lookbooks'));
     }
 }

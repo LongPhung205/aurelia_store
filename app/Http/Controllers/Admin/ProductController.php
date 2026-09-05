@@ -73,7 +73,7 @@ class ProductController extends Controller
 
     public function create()
     {
-        $categories = Category::all();
+        $categories = Category::whereNull('parent_id')->with('children')->get();
         $colors = \App\Models\Color::all();
         $sizes = \App\Models\Size::all();
         $materials = \App\Models\Material::all();
@@ -151,7 +151,7 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
-        $categories = \App\Models\Category::all();
+        $categories = \App\Models\Category::whereNull('parent_id')->with('children')->get();
         $colors = \App\Models\Color::all();
         $sizes = \App\Models\Size::all();
         $product->load(['variants.color', 'variants.size', 'images']);

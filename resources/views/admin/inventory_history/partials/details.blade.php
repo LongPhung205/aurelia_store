@@ -1,4 +1,19 @@
 <div class="relative overflow-x-auto">
+    @php
+        $firstDetail = $details->first();
+        $isOrder = $firstDetail && $firstDetail->reference && get_class($firstDetail->reference) == 'App\Models\Order';
+    @endphp
+
+    @if($isOrder)
+        <div class="flex p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400" role="alert">
+            <i class="bi bi-info-circle-fill inline flex-shrink-0 mr-3 text-lg"></i>
+            <div>
+                <span class="font-medium">Phiếu xuất kho tự động</span> sinh ra từ Đơn hàng <strong>ORD-{{ $firstDetail->reference_id }}</strong>. 
+                <a href="{{ route('admin.orders.show', $firstDetail->reference_id) }}" class="font-semibold underline hover:text-blue-900 dark:hover:text-blue-300 ml-1">Xem chi tiết đơn hàng</a>
+            </div>
+        </div>
+    @endif
+
     <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
         <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
             <tr>

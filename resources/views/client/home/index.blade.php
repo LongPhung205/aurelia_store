@@ -483,6 +483,36 @@
     </div>
 </section>
 
+<!-- Tạp chí thời trang / Lookbook -->
+@if(isset($lookbooks) && $lookbooks->count() > 0)
+<section class="mb-16">
+    <div class="flex items-center justify-between mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 border-l-4 border-brand pl-3">AURELIA STYLE</h2>
+        <a href="{{ url('/posts') }}" class="text-brand hover:underline font-medium">Xem tất cả <i class="bi bi-arrow-right"></i></a>
+    </div>
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        @foreach($lookbooks as $post)
+        <a href="{{ url('/' . $post->slug . '-p' . $post->id . '.html') }}" class="group block relative rounded-xl overflow-hidden aspect-[3/4] shadow-sm hover:shadow-lg transition-all duration-300">
+            @if($post->image)
+                <img src="{{ Storage::url($post->image) }}" alt="{{ $post->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+            @else
+                <img src="https://via.placeholder.com/400x533?text=Aurelia+Style" alt="{{ $post->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+            @endif
+            
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity"></div>
+            
+            <div class="absolute bottom-0 left-0 right-0 p-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                <span class="text-brand text-xs font-bold uppercase tracking-wider mb-2 block">{{ $post->published_at ? $post->published_at->format('d/m/Y') : 'Mới nhất' }}</span>
+                <h3 class="text-white font-bold text-lg leading-tight line-clamp-2 mb-2">{{ $post->title }}</h3>
+                <p class="text-gray-200 text-sm line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">{{ $post->excerpt }}</p>
+            </div>
+        </a>
+        @endforeach
+    </div>
+</section>
+@endif
+
 <!-- Ý kiến khách hàng (Testimonials) -->
 <section class="py-16 bg-gray-50 rounded-2xl mb-16 -mx-4 px-4 sm:mx-0 sm:px-8">
     <div class="text-center mb-10">
