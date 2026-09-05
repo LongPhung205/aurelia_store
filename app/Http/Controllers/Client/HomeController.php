@@ -1,0 +1,50 @@
+<?php
+
+namespace App\Http\Controllers\Client;
+
+use App\Http\Controllers\Controller;
+use App\Models\Category;
+use App\Models\FlashSale;
+use App\Models\Product;
+use Illuminate\Http\Request;
+
+class HomeController extends Controller
+{
+    public function index()
+    {
+        // 1. Lấy Flash Sale đang active (nếu có) kèm items và variants
+        $flashSale = FlashSale::with(['items.product.variants.color', 'items.product.variants.size', 'items.product.primaryImage'])
+            ->where('is_active', true)
+            ->where('start_time', '<=', now())
+            ->where('end_time', '>=', now())
+            ->first();
+
+        // 2. Lấy Banners (active, sort by position)
+        $banners = \App\Models\Banner::where('is_active', true)
+            ->orderBy('position')
+            ->get();
+
+        // 3. Lấy 8 sản phẩm nổi bật (Top view_count)
+        $featuredProducts = Product::with(['variants.color', 'variants.size', 'primaryImage'])
+            ->where('status', 'active') // Giả sử có trạng thái active
+            ->orderBy('view_count', 'desc')
+            ->take(8)
+            ->get();
+            
+        // Nếu trường status không có thì cần check lại migration Product, nhưng mình đã xem bảng Product có trường 'status'
+
+        // 4. Lấy Collections (Bộ sưu tập)
+        $collections = \App\Models\Collection::where('is_active', true)
+            ->orderBy('position', 'asc')
+            ->take(6)
+            ->get();
+
+        // 5. Lấy danh sách ID sản phẩm đã yêu thích
+        $wishlistedProductIds = [];
+        if (auth()->check()) {
+            $wishlistedProductIds = auth()->user()->wishlists()->pluck('product_id')->toArray();
+        }
+
+        return view('client.home.index', compact('flashSale', 'banners', 'featuredProducts', 'collections', 'wishlistedProductIds'));
+    }
+}

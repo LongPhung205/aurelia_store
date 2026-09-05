@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('title', 'Admin Dashboard') - Váy Công Sở</title>
+    <!-- Tailwind CSS & Flowbite (Vite) -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <!-- Bootstrap Icons -->
+    <link href="{{ asset('vendor/bootstrap-icons/font/bootstrap-icons.css') }}" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Tailwind gray-100 */
+        }
+        
+        /* Modal Backdrop Blur */
+        body > div.fixed.inset-0.z-40 {
+            backdrop-filter: blur(8px) !important;
+            -webkit-backdrop-filter: blur(8px) !important;
+            background-color: rgba(15, 23, 42, 0.5) !important;
+        }
+
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1; /* slate-300 */
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; /* slate-400 */
+        }
+
+        /* Sidebar scrollbar */
+        .sidebar-scrollbar::-webkit-scrollbar {
+            width: 5px;
+        }
+        .sidebar-scrollbar::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+        .sidebar-scrollbar::-webkit-scrollbar-thumb {
+            background: #ffffff;
+            border-radius: 10px;
+        }
+        .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #f1f1f1;
+        }
+        
+        /* Utility for Dropzone/Uploads later */
+        .image-preview-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        .image-preview-wrapper .btn-remove {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            display: none;
+        }
+        .image-preview-wrapper:hover .btn-remove {
+            display: block;
+        }
+    </style>
+    </style>
+    @stack('styles')
+    
+    <script>
+        // Prevent FOUC
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-200">
+
+    <!-- Top Navbar -->
+    <nav class="fixed top-0 right-0 z-30 w-full sm:w-[calc(100%-272px)] bg-transparent sm:bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
+        <div class="px-3 py-3 lg:px-5 lg:pl-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center justify-start">
+                    <!-- Mobile sidebar toggle -->
+                    <button data-drawer-target="logo-sidebar" data-drawer-toggle="logo-sidebar" aria-controls="logo-sidebar" type="button" class="inline-flex items-center p-2 text-sm text-slate-500 rounded-lg sm:hidden hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-200 dark:text-slate-400 dark:hover:bg-slate-700 dark:focus:ring-slate-600">
+                        <span class="sr-only">Open sidebar</span>
+                        <i class="bi bi-list text-2xl"></i>
+                    </button>
+                    <!-- Page Title (Optional placeholder for future use) -->
+                    <span class="hidden sm:block text-slate-800 dark:text-white font-semibold ms-3 text-lg">@yield('page_title', 'Tổng quan')</span>
+                </div>
+                <div class="flex items-center">
+                    <!-- Notifications Dropdown -->
+                    <button type="button" data-dropdown-toggle="notification-dropdown" class="p-2 mr-1 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg focus:outline-none focus:ring-4 focus:ring-slate-200 dark:focus:ring-slate-700 relative transition-colors">
+                        <i class="bi bi-bell text-lg"></i>
+                        <!-- Notification Badge -->
+                        @if(session('success') || session('error') || session('status'))
+                        <div class="absolute inline-flex items-center justify-center w-2 h-2 bg-rose-500 border-2 border-white dark:border-slate-800 rounded-full top-2 right-2"></div>
+                        @endif
+                    </button>
+                    
+                    <!-- Notification Dropdown menu -->
+                    <div id="notification-dropdown" class="z-50 hidden my-4 w-72 max-w-sm text-base list-none bg-white divide-y divide-slate-100 rounded-lg shadow-lg dark:bg-slate-700 dark:divide-slate-600 border border-slate-100 dark:border-slate-600">
+                        <div class="block px-4 py-2 font-medium text-center text-slate-700 bg-slate-50 dark:bg-slate-700 dark:text-white rounded-t-lg">
+                            Thông báo
+                        </div>
+                        <div class="divide-y divide-slate-100 dark:divide-slate-600 max-h-64 overflow-y-auto">
+                            @if(session('success'))
+                            <a href="#" class="flex px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">
+                                <div class="flex-shrink-0">
+                                    <div class="w-9 h-9 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                                        <i class="bi bi-check-circle"></i>
+                                    </div>
+                                </div>
+                                <div class="w-full pl-3">
+                                    <div class="text-slate-500 text-sm mb-1.5 dark:text-slate-300">{{ session('success') }}</div>
+                                    <div class="text-xs text-emerald-600 dark:text-emerald-400">Vừa xong</div>
+                                </div>
+                            </a>
+                            @endif
+
+                            @if(session('error'))
+                            <a href="#" class="flex px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">
+                                <div class="flex-shrink-0">
+                                    <div class="w-9 h-9 rounded-full bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center text-rose-600 dark:text-rose-400">
+                                        <i class="bi bi-exclamation-circle"></i>
+                                    </div>
+                                </div>
+                                <div class="w-full pl-3">
+                                    <div class="text-slate-500 text-sm mb-1.5 dark:text-slate-300">{{ session('error') }}</div>
+                                    <div class="text-xs text-rose-600 dark:text-rose-400">Vừa xong</div>
+                                </div>
+                            </a>
+                            @endif
+
+                            @if(session('status'))
+                            <a href="#" class="flex px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">
+                                <div class="flex-shrink-0">
+                                    <div class="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                                        <i class="bi bi-info-circle"></i>
+                                    </div>
+                                </div>
+                                <div class="w-full pl-3">
+                                    <div class="text-slate-500 text-sm mb-1.5 dark:text-slate-300">{{ session('status') }}</div>
+                                    <div class="text-xs text-blue-600 dark:text-blue-400">Vừa xong</div>
+                                </div>
+                            </a>
+                            @endif
+
+                            @if(!session('success') && !session('error') && !session('status'))
+                            <div class="px-4 py-4 text-center text-sm text-slate-500 dark:text-slate-400">
+                                Không có thông báo mới
+                            </div>
+                            @endif
+                        </div>
+                        <a href="#" class="block py-2 text-sm font-medium text-center text-slate-900 bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-white rounded-b-lg transition-colors">
+                            <div class="inline-flex items-center">
+                                <i class="bi bi-eye mr-2"></i>Xem tất cả
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Theme Switcher Dropdown -->
+                    <button id="theme-toggle" type="button" data-dropdown-toggle="theme-dropdown" class="text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 focus:outline-none focus:ring-4 focus:ring-slate-200 dark:focus:ring-slate-700 rounded-lg p-2 mr-2 transition-colors">
+                        <i id="theme-toggle-icon" class="bi bi-circle-half text-lg"></i>
+                    </button>
+                    <!-- Theme Dropdown menu -->
+                    <div id="theme-dropdown" class="z-50 hidden my-4 text-base list-none bg-white divide-y divide-gray-100 rounded-lg shadow-lg dark:bg-slate-700 dark:divide-slate-600 border border-slate-100 dark:border-slate-600">
+                        <ul class="py-2" aria-labelledby="theme-toggle">
+                            <li>
+                                <button type="button" data-theme-value="light" class="theme-btn w-full flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 dark:text-slate-200 dark:hover:text-white">
+                                    <i class="bi bi-sun-fill mr-2"></i>Sáng
+                                </button>
+                            </li>
+                            <li>
+                                <button type="button" data-theme-value="dark" class="theme-btn w-full flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 dark:text-slate-200 dark:hover:text-white">
+                                    <i class="bi bi-moon-stars-fill mr-2"></i>Tối
+                                </button>
+                            </li>
+                            <li>
+                                <button type="button" data-theme-value="system" class="theme-btn w-full flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 dark:text-slate-200 dark:hover:text-white">
+                                    <i class="bi bi-display mr-2"></i>Hệ thống
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Floating Panel Sidebar -->
+    <aside id="logo-sidebar" class="fixed top-2 left-2 bottom-2 z-40 w-64 h-[calc(100vh-1rem)] flex flex-col transition-transform -translate-x-full sm:translate-x-0 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm transition-colors duration-200" aria-label="Sidebar">
+        
+        <!-- Sticky Header (Logo & Profile) -->
+        <div class="px-3 pt-4 pb-2 shrink-0">
+            <!-- Logo -->
+            <div class="flex items-center justify-between px-2 mb-6">
+                <a href="{{ url('/') }}" class="flex items-center gap-3">
+                    <img src="{{ asset('images/nenlogoaureliawwhite.png') }}" alt="Aurelia Logo" class="h-10 w-auto object-contain">
+                    <span class="text-2xl font-bold whitespace-nowrap text-slate-800 dark:text-white tracking-tight leading-none mt-1">Aurelia</span>
+                </a>
+                <button type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                    <i class="bi bi-layout-sidebar"></i>
+                </button>
+            </div>
+
+            <!-- User Profile Block -->
+            @auth
+            <div class="px-2 mb-2">
+                <div class="flex items-center gap-3 p-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer" data-dropdown-toggle="sidebar-user-dropdown" data-dropdown-placement="bottom-start">
+                    @if(auth()->user()->avatar)
+                        <img class="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-600" src="{{ asset('storage/' . auth()->user()->avatar) }}" alt="User avatar">
+                    @else
+                        <img class="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-600" src="https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff" alt="User avatar">
+                    @endif
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-slate-900 dark:text-white truncate">{{ auth()->user()->name }}</p>
+                        <div class="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                            <span class="inline-block w-3 h-3 bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400 rounded-sm flex items-center justify-center text-[8px] font-bold">PRO</span>
+                            <span class="truncate">{{ auth()->user()->role == 'admin' ? 'Administration' : 'User' }}</span>
+                        </div>
+                    </div>
+                    <i class="bi bi-chevron-down text-slate-400 text-xs"></i>
+                </div>
+                
+                <!-- Sidebar User Dropdown -->
+                <div id="sidebar-user-dropdown" class="z-50 hidden w-56 text-base list-none bg-white divide-y divide-slate-100 rounded-lg shadow-lg dark:bg-slate-700 dark:divide-slate-600 border border-slate-100 dark:border-slate-600">
+                    <div class="px-4 py-3" role="none">
+                        <p class="text-sm font-medium text-slate-500 truncate dark:text-slate-400" role="none">{{ auth()->user()->email }}</p>
+                    </div>
+                    <ul class="py-1" role="none">
+                        <li>
+                            <a href="{{ route('admin.users.edit', auth()->id()) }}" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-600"><i class="bi bi-person mr-2"></i>Hồ sơ</a>
+                        </li>
+                        <li>
+                            <form method="POST" action="{{ route('logout') }}" class="m-0">
+                                @csrf
+                                <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-slate-100 dark:text-rose-500 dark:hover:bg-slate-600"><i class="bi bi-box-arrow-right mr-2"></i>Đăng xuất</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            @endauth
+        </div>
+
+        <!-- Scrollable Menu Area -->
+        <div class="flex-1 px-3 pb-4 overflow-y-auto sidebar-scrollbar flex flex-col justify-between">
+            <div>
+                <!-- Search Bar -->
+                <div class="px-2 mb-4">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <i class="bi bi-search text-slate-400"></i>
+                        </div>
+                        <input type="text" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-9 p-2 transition-colors" placeholder="Search">
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                            <kbd class="px-1.5 py-0.5 text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded-md dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700">⌘F</kbd>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Menu -->
+                <ul class="space-y-1 font-medium mt-2">
+                    <li>
+                        <a href="{{ url('/') }}" class="flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-200 group {{ request()->is('/') ? 'text-primary-700 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-200 font-normal' }}">
+                            <div class="flex items-center gap-3 text-sm">
+                                <i class="bi bi-grid text-base {{ request()->is('/') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400 dark:text-slate-500' }}"></i>
+                                <span>Dashboard</span>
+                            </div>
+                        </a>
+                    </li>
+                    
+                    <li>
+                        <a href="#" class="flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-200 font-normal">
+                            <div class="flex items-center gap-3 text-sm">
+                                <i class="bi bi-chat-square-text text-base text-slate-400 dark:text-slate-500 group-hover:text-slate-500 dark:group-hover:text-slate-400"></i>
+                                <span>Messages</span>
+                            </div>
+                            <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-semibold text-white bg-primary-500 rounded-full">9</span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="#" class="flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-200 font-normal">
+                            <div class="flex items-center gap-3 text-sm">
+                                <i class="bi bi-bell text-base text-slate-400 dark:text-slate-500 group-hover:text-slate-500 dark:group-hover:text-slate-400"></i>
+                                <span>Notifications</span>
+                            </div>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="#" class="flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-200 font-normal">
+                            <div class="flex items-center gap-3 text-sm">
+                                <i class="bi bi-bar-chart text-base text-slate-400 dark:text-slate-500 group-hover:text-slate-500 dark:group-hover:text-slate-400"></i>
+                                <span>Analytics</span>
+                            </div>
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Product Management Section -->
+                <div class="mt-6">
+                    <button type="button" class="flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-slate-800 dark:text-slate-200 transition-colors group" aria-controls="dropdown-products" data-collapse-toggle="dropdown-products">
+                        <span>Product Management</span>
+                        <i class="bi bi-chevron-down text-[10px] text-slate-400 transition-transform duration-200 group-data-[collapse-open]:rotate-180"></i>
+                    </button>
+                    <ul id="dropdown-products" class="{{ request()->routeIs('products.*') || request()->routeIs('categories.*') || request()->routeIs('attributes.*') || request()->routeIs('colors.*') || request()->routeIs('sizes.*') || request()->routeIs('materials.*') ? '' : 'hidden' }} space-y-1 py-1 mt-1">
+                        <li>
+                            <a href="{{ route('admin.products.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('products.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                                <i class="bi bi-box-seam text-base {{ request()->routeIs('products.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                                <span>Products</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.categories.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('categories.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                                <i class="bi bi-folder2 text-base {{ request()->routeIs('categories.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                                <span>Categories</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.attributes.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('attributes.*') || request()->routeIs('colors.*') || request()->routeIs('sizes.*') || request()->routeIs('materials.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                                <i class="bi bi-tags text-base {{ request()->routeIs('attributes.*') || request()->routeIs('colors.*') || request()->routeIs('sizes.*') || request()->routeIs('materials.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                                <span>Attributes</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Warehouse Section -->
+                <div class="mt-4">
+                    <button type="button" class="flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-slate-800 dark:text-slate-200 transition-colors group" aria-controls="dropdown-warehouse" data-collapse-toggle="dropdown-warehouse">
+                        <span>Warehouse & Inventory</span>
+                        <i class="bi bi-chevron-down text-[10px] text-slate-400 transition-transform duration-200 {{ request()->routeIs('suppliers.*') || request()->routeIs('imports.*') || request()->routeIs('inventory.*') || request()->routeIs('inventory_history.*') ? 'rotate-180' : 'group-data-[collapse-open]:rotate-180' }}"></i>
+                    </button>
+                    <ul id="dropdown-warehouse" class="{{ request()->routeIs('imports.*') || request()->routeIs('inventory.*') || request()->routeIs('inventory_history.*') ? '' : 'hidden' }} space-y-1 py-1 mt-1">
+                        <li>
+                            <a href="{{ route('admin.imports.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('imports.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                                <i class="bi bi-box-arrow-in-down text-base {{ request()->routeIs('imports.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                                <span>Nhập kho</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.inventory.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('inventory.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                                <i class="bi bi-boxes text-base {{ request()->routeIs('inventory.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                                <span>Tồn kho (Stock)</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.inventory_history.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('inventory_history.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                                <i class="bi bi-clock-history text-base {{ request()->routeIs('inventory_history.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                                <span>Thẻ kho</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Orders Section -->
+                <div class="mt-4">
+                    <button type="button" class="flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-slate-800 dark:text-slate-200 transition-colors group" aria-controls="dropdown-orders" data-collapse-toggle="dropdown-orders">
+                        <span>Orders & Fulfillment</span>
+                        <i class="bi bi-chevron-down text-[10px] text-slate-400 transition-transform duration-200"></i>
+                    </button>
+                    <ul id="dropdown-orders" class="{{ request()->routeIs('orders.*') ? '' : 'hidden' }} space-y-1 py-1 mt-1">
+                        <li>
+                            <a href="{{ route('admin.orders.index') }}" class="flex items-center justify-between px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('orders.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                                <div class="flex items-center gap-3">
+                                    <i class="bi bi-cart3 text-base {{ request()->routeIs('orders.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                                    <span>Danh sách Đơn hàng</span>
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center justify-between px-3 py-2 pl-9 text-sm rounded-lg transition-colors text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50">
+                                <div class="flex items-center gap-3">
+                                    <i class="bi bi-truck text-base text-slate-400"></i>
+                                    <span>Shipping</span>
+                                </div>
+                                <span class="text-[10px] text-slate-400">+</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- Marketing Section -->
+                <div class="mt-4">
+                    <button type="button" class="flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-slate-800 dark:text-slate-200 transition-colors group" aria-controls="dropdown-marketing" data-collapse-toggle="dropdown-marketing">
+                        <span>Marketing & Khuyến mãi</span>
+                        <i class="bi bi-chevron-down text-[10px] text-slate-400 transition-transform duration-200 {{ request()->routeIs('coupons.*') || request()->routeIs('flash_sales.*') || request()->routeIs('banners.*') || request()->routeIs('collections.*') ? 'rotate-180' : 'group-data-[collapse-open]:rotate-180' }}"></i>
+                    </button>
+                    <ul id="dropdown-marketing" class="{{ request()->routeIs('coupons.*') || request()->routeIs('flash_sales.*') || request()->routeIs('banners.*') || request()->routeIs('collections.*') ? '' : 'hidden' }} space-y-1 py-1 mt-1">
+                        <li>
+                            <a href="{{ route('admin.banners.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('banners.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                                <i class="bi bi-image text-base {{ request()->routeIs('banners.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                                <span>Banner Trang Chủ</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.coupons.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('coupons.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                                <i class="bi bi-ticket-perforated text-base {{ request()->routeIs('coupons.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                                <span>Mã Giảm Giá</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.flash_sales.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('flash_sales.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                                <i class="bi bi-lightning-charge text-base {{ request()->routeIs('flash_sales.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                                <span>Flash Sale</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.collections.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('collections.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                                <i class="bi bi-collection text-base {{ request()->routeIs('collections.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                                <span>Bộ sưu tập</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- System Section -->
+                <div class="mt-4 mb-4">
+                    <button type="button" class="flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-slate-800 dark:text-slate-200 transition-colors group" aria-controls="dropdown-system" data-collapse-toggle="dropdown-system">
+                        <span>Hệ thống</span>
+                        <i class="bi bi-chevron-down text-[10px] text-slate-400 transition-transform duration-200 {{ request()->routeIs('users.*') || request()->routeIs('settings.*') ? 'rotate-180' : 'group-data-[collapse-open]:rotate-180' }}"></i>
+                    </button>
+                    <ul id="dropdown-system" class="{{ request()->routeIs('users.*') || request()->routeIs('settings.*') ? '' : 'hidden' }} space-y-1 py-1 mt-1">
+                        <li>
+                            <a href="{{ route('admin.users.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('users.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                                <i class="bi bi-people text-base {{ request()->routeIs('users.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                                <span>Tài khoản</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.settings.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('settings.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                                <i class="bi bi-gear text-base {{ request()->routeIs('settings.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                                <span>Cài đặt chung</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="p-4 sm:ml-[272px] mt-14">
+
+
+        @yield('content')
+    </div>
+
+    <!-- No Bootstrap JS -->
+    <!-- Axios for AJAX -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        // Setup CSRF token for Axios
+        window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+        let token = document.head.querySelector('meta[name="csrf-token"]');
+        if (token) {
+            window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token.content;
+        }
+    </script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Global Notifications (Toast) -->
+    <script>
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 5000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
+        @if(session('success'))
+            Toast.fire({
+                icon: 'success',
+                title: '{{ session('success') }}'
+            });
+        @endif
+
+        @if(session('error'))
+            Toast.fire({
+                icon: 'error',
+                title: '{{ session('error') }}'
+            });
+        @endif
+    </script>
+
+    <!-- Global form delete confirmation -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const deleteForms = document.querySelectorAll('.form-delete');
+            deleteForms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const title = this.dataset.confirmTitle || 'Xóa dữ liệu?';
+                    const text = this.dataset.confirmText || 'Hành động này không thể hoàn tác!';
+                    
+                    Swal.fire({
+                        title: title,
+                        text: text,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#6366f1',
+                        cancelButtonColor: '#64748b',
+                        confirmButtonText: '<i class="bi bi-trash"></i> Đồng ý xóa',
+                        cancelButtonText: 'Hủy'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+    
+    <!-- Theme Switcher Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            const themeToggleIcon = document.getElementById('theme-toggle-icon');
+            const themeBtns = document.querySelectorAll('.theme-btn');
+            
+            // Function to set icon based on current theme preference
+            const updateThemeIcon = (theme) => {
+                themeToggleIcon.className = 'text-lg'; // reset classes
+                if (theme === 'light') {
+                    themeToggleIcon.classList.add('bi', 'bi-sun-fill');
+                } else if (theme === 'dark') {
+                    themeToggleIcon.classList.add('bi', 'bi-moon-stars-fill');
+                } else {
+                    themeToggleIcon.classList.add('bi', 'bi-circle-half');
+                }
+                
+                // Highlight active option
+                themeBtns.forEach(btn => {
+                    if(btn.dataset.themeValue === theme) {
+                        btn.classList.add('text-primary-600', 'dark:text-primary-400', 'bg-slate-50', 'dark:bg-slate-800');
+                    } else {
+                        btn.classList.remove('text-primary-600', 'dark:text-primary-400', 'bg-slate-50', 'dark:bg-slate-800');
+                    }
+                });
+            };
+
+            // Get initial theme from localStorage or default to system
+            let currentTheme = localStorage.getItem('color-theme') || 'system';
+            updateThemeIcon(currentTheme);
+
+            // Handle theme button clicks
+            themeBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const selectedTheme = e.currentTarget.dataset.themeValue;
+                    
+                    if (selectedTheme === 'light') {
+                        document.documentElement.classList.remove('dark');
+                        localStorage.setItem('color-theme', 'light');
+                    } else if (selectedTheme === 'dark') {
+                        document.documentElement.classList.add('dark');
+                        localStorage.setItem('color-theme', 'dark');
+                    } else {
+                        // System
+                        localStorage.removeItem('color-theme');
+                        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                            document.documentElement.classList.add('dark');
+                        } else {
+                            document.documentElement.classList.remove('dark');
+                        }
+                    }
+                    
+                    updateThemeIcon(selectedTheme);
+                });
+            });
+
+            // Listen for system preference changes if 'system' is selected
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                if (!localStorage.getItem('color-theme')) {
+                    if (e.matches) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                }
+            });
+        });
+    </script>
+    
+    @stack('scripts')
+</body>
+</html>
+
