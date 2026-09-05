@@ -211,7 +211,7 @@
             </div>
 
             <!-- 4. Call to Action -->
-            <div class="flex flex-col sm:flex-row gap-4 mt-auto border-t border-gray-100 pt-6">
+            <div class="flex flex-col sm:flex-row gap-4 mt-2 border-t border-gray-100 pt-6">
                 <!-- Quantity -->
                 <div class="flex items-center border border-gray-300 rounded-xl bg-white p-1 h-14 w-full sm:w-[130px] shrink-0">
                     <button type="button" @click="quantity > 1 ? quantity-- : null" class="w-10 h-full flex items-center justify-center text-gray-500 hover:text-brand hover:bg-gray-50 rounded-lg transition-colors">

@@ -39,16 +39,21 @@
 
 <!-- Danh mục mức 2 -->
 @if(isset($homeCategories) && $homeCategories->count() > 0)
-<section class="mb-12 mt-8">
-    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+<section class="mb-12 mt-12 md:mt-16">
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-12 md:gap-y-16">
         @foreach($homeCategories as $category)
-        <a href="#" class="group bg-gray-50 rounded flex items-center justify-between p-4 md:p-6 hover:shadow-md transition-shadow">
-            <span class="font-bold text-gray-800 uppercase tracking-wide group-hover:text-brand transition-colors">{{ $category->name }}</span>
-            <div class="w-16 h-16 md:w-20 md:h-20 shrink-0">
+        <a href="#" class="group relative bg-[#f4f6f8] rounded-xl flex items-center p-5 md:p-8 hover:shadow-lg transition-all duration-300 h-28 md:h-36">
+            <!-- Tên danh mục -->
+            <span class="font-bold text-gray-800 uppercase tracking-wide group-hover:text-brand transition-colors relative z-10 text-sm md:text-lg w-1/2 md:w-3/5 break-words">
+                {{ $category->name }}
+            </span>
+            
+            <!-- Ảnh nổi lên -->
+            <div class="absolute right-2 md:right-6 bottom-0 w-24 h-32 md:w-32 md:h-44 bg-white rounded-t-xl md:rounded-xl shadow-[0_-4px_15px_-3px_rgba(0,0,0,0.1)] md:shadow-lg shrink-0 z-20 transition-transform duration-500 group-hover:-translate-y-3 p-2 flex items-center justify-center">
                 @if($category->image)
-                    <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform">
+                    <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="max-w-full max-h-full object-contain">
                 @else
-                    <div class="w-full h-full bg-gray-200 rounded-full flex items-center justify-center text-gray-400">
+                    <div class="w-12 h-12 md:w-16 md:h-16 bg-gray-100 rounded-full flex items-center justify-center text-gray-400">
                         <i class="bi bi-image text-xl"></i>
                     </div>
                 @endif
@@ -277,7 +282,7 @@
     
     <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
         @foreach($collections as $collection)
-        <a href="{{ route('collections.show', $collection->slug) }}" class="relative h-48 md:h-64 rounded-xl overflow-hidden group shadow">
+        <a href="{{ route('collections.show', $collection->slug) }}" class="relative aspect-[3/4] rounded-xl overflow-hidden group shadow">
             @if($collection->image)
                 <img src="{{ Storage::url($collection->image) }}" alt="{{ $collection->name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
             @else
