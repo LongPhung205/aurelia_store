@@ -27,11 +27,11 @@
             <div>
                 <h4 class="font-bold text-brand mb-6 uppercase tracking-wider text-sm">Chăm sóc khách hàng</h4>
                 <ul class="space-y-3">
-                    <li><a href="#" class="text-gray-500 hover:text-brand text-sm transition-colors">Chính sách vận chuyển</a></li>
-                    <li><a href="#" class="text-gray-500 hover:text-brand text-sm transition-colors">Chính sách đổi trả</a></li>
-                    <li><a href="#" class="text-gray-500 hover:text-brand text-sm transition-colors">Hướng dẫn mua hàng</a></li>
-                    <li><a href="#" class="text-gray-500 hover:text-brand text-sm transition-colors">Bảo mật thông tin</a></li>
-                    <li><a href="#" class="text-gray-500 hover:text-brand text-sm transition-colors">Liên hệ hỗ trợ</a></li>
+                    <li><a href="{{ route('pages.shipping') }}" class="text-gray-500 hover:text-brand text-sm transition-colors">Chính sách vận chuyển</a></li>
+                    <li><a href="{{ route('pages.return_policy') }}" class="text-gray-500 hover:text-brand text-sm transition-colors">Chính sách đổi trả</a></li>
+                    <li><a href="{{ route('pages.how_to_buy') }}" class="text-gray-500 hover:text-brand text-sm transition-colors">Hướng dẫn mua hàng</a></li>
+                    <li><a href="{{ route('pages.privacy') }}" class="text-gray-500 hover:text-brand text-sm transition-colors">Bảo mật thông tin</a></li>
+                    <li><a href="{{ route('pages.contact') }}" class="text-gray-500 hover:text-brand text-sm transition-colors">Liên hệ hỗ trợ</a></li>
                 </ul>
             </div>
 
@@ -39,11 +39,11 @@
             <div>
                 <h4 class="font-bold text-brand mb-6 uppercase tracking-wider text-sm">Về Aurelia</h4>
                 <ul class="space-y-3">
-                    <li><a href="#" class="text-gray-500 hover:text-brand text-sm transition-colors">Câu chuyện thương hiệu</a></li>
-                    <li><a href="#" class="text-gray-500 hover:text-brand text-sm transition-colors">Hệ thống cửa hàng</a></li>
-                    <li><a href="#" class="text-gray-500 hover:text-brand text-sm transition-colors">Tuyển dụng</a></li>
-                    <li><a href="#" class="text-gray-500 hover:text-brand text-sm transition-colors">Góc báo chí</a></li>
-                    <li><a href="#" class="text-gray-500 hover:text-brand text-sm transition-colors">Khách hàng thân thiết</a></li>
+                    <li><a href="{{ route('pages.brand_story') }}" class="text-gray-500 hover:text-brand text-sm transition-colors">Câu chuyện thương hiệu</a></li>
+                    <li><a href="{{ route('pages.stores') }}" class="text-gray-500 hover:text-brand text-sm transition-colors">Hệ thống cửa hàng</a></li>
+                    <li><a href="{{ route('pages.careers') }}" class="text-gray-500 hover:text-brand text-sm transition-colors">Tuyển dụng</a></li>
+                    <li><a href="{{ route('pages.press') }}" class="text-gray-500 hover:text-brand text-sm transition-colors">Góc báo chí</a></li>
+                    <li><a href="{{ route('pages.loyalty') }}" class="text-gray-500 hover:text-brand text-sm transition-colors">Khách hàng thân thiết</a></li>
                 </ul>
             </div>
 

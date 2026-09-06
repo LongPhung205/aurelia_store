@@ -138,7 +138,7 @@ class CheckoutController extends Controller
             'province_id' => 'required|integer',
             'district_id' => 'required|integer',
             'ward_code' => 'required|string',
-            'payment_method' => 'required|in:cod',
+            'payment_method' => 'required|in:cod,payos',
             'coupon_code' => 'nullable|string',
         ]);
 
@@ -207,27 +207,35 @@ class CheckoutController extends Controller
                 'total_amount' => $totalAmount,
                 'coupon_id' => $couponId,
                 'payment_method' => $request->payment_method,
+                'payment_status' => 'pending',
                 'note' => $request->note,
             ]);
 
             // Create Order Items
             foreach ($cartItems as $item) {
-                $variant = $item->productVariant;
-                $product = $variant->product;
+                $variantId = $item->productVariant->id;
+                // Use lockForUpdate to ensure no race condition during checkout
+                $lockedVariant = \App\Models\ProductVariant::where('id', $variantId)->lockForUpdate()->first();
                 
-                $price = $variant->sale_price ?? $variant->price;
+                if (!$lockedVariant || $lockedVariant->stock_quantity < $item->quantity) {
+                    throw new \Exception("Sản phẩm hiện không đủ số lượng trong kho.");
+                }
+
+                $product = $lockedVariant->product;
+                
+                $price = $lockedVariant->sale_price ?? $lockedVariant->price;
                 
                 $order->items()->create([
-                    'product_variant_id' => $variant->id,
+                    'product_variant_id' => $lockedVariant->id,
                     'product_name' => $product->name,
-                    'variant_attributes' => ($variant->color->name ?? '') . ' - ' . ($variant->size->name ?? ''),
+                    'variant_attributes' => ($lockedVariant->color->name ?? '') . ' - ' . ($lockedVariant->size->name ?? ''),
                     'quantity' => $item->quantity,
                     'price' => $price,
                     'total' => $price * $item->quantity,
                 ]);
 
-                // Deduct stock
-                $variant->decrement('stock_quantity', $item->quantity);
+                // Deduct stock immediately to reserve it, regardless of payment method
+                $lockedVariant->decrement('stock_quantity', $item->quantity);
             }
 
             // Clear only selected items from cart
@@ -239,6 +247,10 @@ class CheckoutController extends Controller
             }
 
             DB::commit();
+
+            if ($request->payment_method === 'payos') {
+                return redirect()->route('payos.create', ['order' => $order->id]);
+            }
 
             return redirect()->route('home')->with('success', 'Đặt hàng thành công! Đơn hàng của bạn đang chờ xác nhận (Mã đơn: ORD-' . $order->id . ')');
 

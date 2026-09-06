@@ -22,7 +22,24 @@ Route::prefix('cart')->name('cart.')->group(function () {
 
 // Posts
 Route::get('/posts', [\App\Http\Controllers\Client\PostController::class, 'index'])->name('posts.index');
-Route::get('/{slug}-p{id}.html', [\App\Http\Controllers\Client\PostController::class, 'show'])->name('posts.show');
+Route::get('/{slug}-p{id}.html', [\App\Http\Controllers\Client\PostController::class, 'show'])
+    ->where('slug', '[a-zA-Z0-9\-]+')
+    ->name('posts.show');
+
+// Static Pages
+Route::prefix('pages')->name('pages.')->group(function () {
+    Route::get('/chinh-sach-van-chuyen', [\App\Http\Controllers\Client\PageController::class, 'shipping'])->name('shipping');
+    Route::get('/chinh-sach-doi-tra', [\App\Http\Controllers\Client\PageController::class, 'returnPolicy'])->name('return_policy');
+    Route::get('/huong-dan-mua-hang', [\App\Http\Controllers\Client\PageController::class, 'howToBuy'])->name('how_to_buy');
+    Route::get('/bao-mat-thong-tin', [\App\Http\Controllers\Client\PageController::class, 'privacy'])->name('privacy');
+    Route::get('/lien-he', [\App\Http\Controllers\Client\PageController::class, 'contact'])->name('contact');
+    
+    Route::get('/cau-chuyen-thuong-hieu', [\App\Http\Controllers\Client\PageController::class, 'brandStory'])->name('brand_story');
+    Route::get('/he-thong-cua-hang', [\App\Http\Controllers\Client\PageController::class, 'stores'])->name('stores');
+    Route::get('/tuyen-dung', [\App\Http\Controllers\Client\PageController::class, 'careers'])->name('careers');
+    Route::get('/goc-bao-chi', [\App\Http\Controllers\Client\PageController::class, 'press'])->name('press');
+    Route::get('/khach-hang-than-thiet', [\App\Http\Controllers\Client\PageController::class, 'loyalty'])->name('loyalty');
+});
 
 // Checkout Routes
 Route::prefix('checkout')->name('checkout.')->group(function () {
@@ -35,6 +52,14 @@ Route::prefix('checkout')->name('checkout.')->group(function () {
     Route::get('/get-districts', [Client\CheckoutController::class, 'getDistricts'])->name('get_districts');
     Route::get('/get-wards', [Client\CheckoutController::class, 'getWards'])->name('get_wards');
     Route::post('/calculate-fee', [Client\CheckoutController::class, 'calculateFee'])->name('calculate_fee');
+});
+
+// PayOS Routes
+Route::prefix('payos')->name('payos.')->group(function () {
+    Route::get('/create/{order}', [Client\PayOSController::class, 'create'])->name('create');
+    Route::get('/return', [Client\PayOSController::class, 'returnPage'])->name('return');
+    Route::get('/cancel', [Client\PayOSController::class, 'cancelPage'])->name('cancel');
+    Route::post('/webhook', [Client\PayOSController::class, 'webhook'])->name('webhook');
 });
 
 

@@ -7,6 +7,51 @@
 @endif
 
 @section('content')
+@push('styles')
+<style>
+    /* Editorial Styling */
+    .editorial-content {
+        font-family: 'Merriweather', 'Georgia', serif;
+        line-height: 1.8;
+    }
+    
+    .editorial-content > p:first-of-type::first-letter {
+        font-size: 4rem;
+        font-weight: 700;
+        float: left;
+        line-height: 1;
+        margin-right: 0.15em;
+        margin-top: 0.1em;
+        color: var(--brand-color, #111827); /* Thường màu đen hoặc màu thương hiệu */
+        font-family: 'Playfair Display', serif;
+    }
+
+    .editorial-content h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        color: #111827;
+        position: relative;
+    }
+
+    .editorial-content h2::after {
+        content: '';
+        display: block;
+        width: 50px;
+        height: 2px;
+        background-color: var(--brand-color, #e5e7eb);
+        margin-top: 0.5rem;
+    }
+    
+    .editorial-content strong {
+        font-weight: 600;
+        color: #111827;
+    }
+</style>
+@endpush
+
 <!-- Breadcrumbs -->
 <div class="bg-gray-50 py-4 border-b border-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -38,8 +83,8 @@
         <!-- Main Content -->
         <article class="lg:col-span-3 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             @if($post->image)
-            <div class="w-full h-64 md:h-96 lg:h-[500px] overflow-hidden">
-                <img src="{{ Storage::url($post->image) }}" alt="{{ $post->title }}" class="w-full h-full object-cover">
+            <div class="w-full overflow-hidden bg-gray-50 flex items-center justify-center">
+                <img src="{{ Storage::url($post->image) }}" alt="{{ $post->title }}" class="w-full max-h-[800px] object-cover object-top">
             </div>
             @endif
             
@@ -52,14 +97,13 @@
                 <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6 leading-tight">{{ $post->title }}</h1>
                 
                 @if($post->excerpt)
-                <div class="text-xl text-gray-600 font-medium italic mb-8 border-l-4 border-brand pl-4 py-1">
-                    {{ $post->excerpt }}
+                <div class="text-xl text-gray-700 font-medium italic mb-8 border-l-4 border-gray-900 pl-5 py-2 bg-gray-50 rounded-r-lg shadow-sm">
+                    "{{ $post->excerpt }}"
                 </div>
                 @endif
                 
-                <div class="prose prose-lg max-w-none text-gray-700">
-                    {!! nl2br(e($post->content)) !!}
-                    <!-- Note: If using rich text editor later, remove nl2br(e()) and just use {!! $post->content !!} -->
+                <div class="prose prose-lg max-w-none text-gray-700 editorial-content">
+                    {!! $post->content !!}
                 </div>
                 
                 <!-- Share -->

@@ -91,14 +91,14 @@
                         </div>
                     </div>
                 </label>
-                <!-- Thêm PayOS sau -->
-                <label class="flex items-center p-4 border border-gray-200 rounded-xl cursor-not-allowed opacity-50 bg-gray-50">
-                    <input type="radio" name="payment_method" value="payos" disabled class="w-5 h-5 text-gray-400 focus:ring-gray-400 border-gray-300">
+                <!-- PayOS -->
+                <label class="flex items-center p-4 border border-gray-200 rounded-xl cursor-pointer bg-white transition-colors hover:bg-gray-50">
+                    <input type="radio" name="payment_method" value="payos" class="w-5 h-5 text-brand focus:ring-brand border-gray-300">
                     <div class="ml-4 flex items-center gap-3">
-                        <i class="bi bi-qr-code-scan text-2xl text-gray-600"></i>
+                        <i class="bi bi-qr-code-scan text-2xl text-blue-600"></i>
                         <div>
-                            <div class="font-bold text-gray-600">Thanh toán qua mã QR (PayOS)</div>
-                            <div class="text-sm text-gray-500">Sắp ra mắt.</div>
+                            <div class="font-bold text-gray-900">Thanh toán chuyển khoản / quét mã QR (PayOS)</div>
+                            <div class="text-sm text-gray-500">Hỗ trợ tự động xác nhận qua VietQR.</div>
                         </div>
                     </div>
                 </label>

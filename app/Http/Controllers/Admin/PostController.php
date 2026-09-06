@@ -27,7 +27,7 @@ class PostController extends Controller
             'title' => 'required|string|max:255',
             'excerpt' => 'nullable|string',
             'content' => 'required|string',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|image|max:10240',
             'is_active' => 'boolean'
         ]);
 
@@ -56,7 +56,7 @@ class PostController extends Controller
             'title' => 'required|string|max:255',
             'excerpt' => 'nullable|string',
             'content' => 'required|string',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|image|max:10240',
             'is_active' => 'boolean'
         ]);
 
