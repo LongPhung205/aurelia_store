@@ -25,16 +25,319 @@
         </main>
         <x-footer />
         
-        <!-- Zalo/Chat Floating Icon -->
-        <a href="#" class="fixed bottom-6 right-6 z-50 animate-bounce hover:animate-none group">
-            <div class="bg-blue-500 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg group-hover:shadow-2xl transition-all">
-                <!-- Fallback icon or text if no Zalo logo available -->
-                <i class="bi bi-chat-dots text-3xl"></i>
-            </div>
-        </a>
+        {{-- ============================================================
+             FLOATING CHAT WIDGET – hiển thị trên mọi trang client
+             ============================================================ --}}
+        <div id="chat-widget-root">
 
-        <!-- Global Toast Notification -->
-        <div x-data="{ show: false, message: '', type: 'success' }" 
+            {{-- Nút bong bóng --}}
+            <button id="chat-toggle-btn" aria-label="Mở chat hỗ trợ"
+                class="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center
+                       bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-xl
+                       hover:shadow-2xl hover:scale-110 active:scale-95 transition-all duration-200 group">
+                <i id="chat-icon-open"  class="bi bi-chat-dots-fill text-2xl"></i>
+                {{-- Badge tin chưa đọc --}}
+                <span id="chat-badge" class="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-[10px] font-bold rounded-full hidden items-center justify-center">0</span>
+            </button>
+
+            {{-- Popup Widget --}}
+            <div id="chat-popup"
+                 class="fixed bottom-6 right-6 z-50 w-80 sm:w-96 rounded-2xl shadow-2xl overflow-hidden
+                        flex flex-col border border-slate-200
+                        transform scale-95 opacity-0 pointer-events-none transition-all duration-200 origin-bottom-right"
+                 style="height: 520px;">
+
+                {{-- Header --}}
+                <div class="bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-3 flex items-center justify-between shrink-0">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+                            <i class="bi bi-headset text-white text-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-white text-sm font-bold leading-tight">Hỗ trợ Aurelia</p>
+                            <p class="text-indigo-200 text-[11px] flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full inline-block"></span>
+                                Chúng tôi luôn sẵn sàng
+                            </p>
+                        </div>
+                    </div>
+                    <button id="chat-close-btn" class="text-white/70 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                {{-- Thông tin đơn hàng (hiện khi mở từ order) --}}
+                <div id="chat-order-banner" class="hidden items-center gap-2 px-3 py-2 bg-indigo-50 border-b border-indigo-100 text-sm">
+                    <i class="bi bi-bag-check-fill text-indigo-500 shrink-0"></i>
+                    <span class="text-indigo-700 font-medium text-xs" id="chat-order-label"></span>
+                </div>
+
+                {{-- Messages area --}}
+                <div id="chat-messages" class="flex-1 overflow-y-auto p-3 space-y-3 bg-slate-50"
+                     style="scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent;">
+
+                    {{-- Loading state --}}
+                    <div id="chat-loading" class="flex flex-col items-center justify-center h-full text-slate-400 py-8">
+                        <div class="w-10 h-10 border-3 border-indigo-300 border-t-indigo-600 rounded-full animate-spin mb-3"></div>
+                        <p class="text-xs">Đang tải...</p>
+                    </div>
+
+                    {{-- Tin nhắn sẽ được render bằng JS --}}
+                </div>
+
+                {{-- Input area --}}
+                <div class="px-3 py-3 bg-white border-t border-slate-200 shrink-0">
+                    <div class="flex items-end gap-2">
+                        <textarea id="chat-widget-input" rows="1" placeholder="Nhập tin nhắn..."
+                            class="flex-1 resize-none text-sm px-3 py-2 rounded-xl border border-slate-200 bg-slate-50
+                                   focus:outline-none focus:ring-2 focus:ring-indigo-300 transition-all text-slate-800 placeholder-slate-400"
+                            style="min-height: 38px; max-height: 96px; scrollbar-width: thin;"></textarea>
+                        <button id="chat-widget-send"
+                            class="w-9 h-9 flex items-center justify-center bg-gradient-to-br from-indigo-500 to-violet-600
+                                   text-white rounded-xl hover:opacity-90 active:scale-95 transition-all shrink-0 disabled:opacity-50">
+                            <i class="bi bi-send-fill text-xs"></i>
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-1.5 ml-0.5">
+                        <kbd class="px-1 py-0.5 bg-slate-100 border border-slate-200 rounded text-[9px] font-mono">Enter</kbd> gửi &nbsp;·&nbsp;
+                        <kbd class="px-1 py-0.5 bg-slate-100 border border-slate-200 rounded text-[9px] font-mono">Shift+Enter</kbd> xuống dòng
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        {{-- ============================================================
+             Script chat widget – PHẢI đặt sau @stack('scripts')
+             ============================================================ --}}
+
+        @stack('scripts')
+
+        <script>
+        (function () {
+            const IS_AUTH    = {{ auth()->check() ? 'true' : 'false' }};
+            const LOGIN_URL  = '{{ route("login") }}';
+            const OPEN_URL   = '{{ route("client.chat.open") }}';
+            const SEND_URL   = '{{ route("client.chat.send") }}';
+            const CSRF       = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            const CURRENT_USER_ID = {{ auth()->check() ? auth()->id() : 'null' }};
+
+            let conversationId = null;
+            let echoChannel    = null;
+            let unreadCount    = 0;
+
+            // ── DOM refs ──
+            const toggleBtn  = document.getElementById('chat-toggle-btn');
+            const popup      = document.getElementById('chat-popup');
+            const badge      = document.getElementById('chat-badge');
+            const messages   = document.getElementById('chat-messages');
+            const loading    = document.getElementById('chat-loading');
+            const input      = document.getElementById('chat-widget-input');
+            const sendBtn    = document.getElementById('chat-widget-send');
+            const closeBtn   = document.getElementById('chat-close-btn');
+            const orderBanner = document.getElementById('chat-order-banner');
+            const orderLabel  = document.getElementById('chat-order-label');
+
+            let isOpen = false;
+
+            // ── Toggle popup ──
+            function openChat(orderId) {
+                if (!IS_AUTH) { window.location.href = LOGIN_URL; return; }
+
+                isOpen = true;
+                popup.classList.remove('scale-95','opacity-0','pointer-events-none');
+                popup.classList.add('scale-100','opacity-100');
+                
+                // Hide bubble button
+                toggleBtn.classList.add('scale-0', 'opacity-0', 'pointer-events-none');
+
+                clearBadge();
+
+                if (conversationId === null) {
+                    initConversation(orderId);
+                } else if (orderId && conversationId) {
+                    // Nếu mở từ đơn hàng khác → reinit
+                    initConversation(orderId);
+                } else {
+                    scrollToBottom();
+                }
+            }
+
+            function closeChat() {
+                isOpen = false;
+                popup.classList.add('scale-95','opacity-0','pointer-events-none');
+                popup.classList.remove('scale-100','opacity-100');
+
+                // Show bubble button
+                toggleBtn.classList.remove('scale-0', 'opacity-0', 'pointer-events-none');
+            }
+
+            toggleBtn.addEventListener('click', () => isOpen ? closeChat() : openChat(null));
+            closeBtn.addEventListener('click', closeChat);
+
+            // ── Lắng nghe sự kiện từ trang order_show ──
+            document.addEventListener('openChatForOrder', function (e) {
+                openChat(e.detail.orderId);
+            });
+
+            // ── Khởi tạo conversation ──
+            async function initConversation(orderId) {
+                loading.classList.remove('hidden');
+                // Xóa tin nhắn cũ
+                Array.from(messages.children).forEach(el => {
+                    if (el.id !== 'chat-loading') el.remove();
+                });
+                loading.classList.remove('hidden');
+
+                try {
+                    const res  = await fetch(OPEN_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':CSRF, 'X-Requested-With':'XMLHttpRequest' },
+                        body: JSON.stringify({ order_id: orderId || null }),
+                    });
+                    const data = await res.json();
+
+                    loading.classList.add('hidden');
+                    conversationId = data.conversation_id;
+
+                    // Hiện banner đơn hàng
+                    if (data.order) {
+                        orderLabel.textContent = `Hỗ trợ đơn hàng #ORD-${data.order.id}`;
+                        orderBanner.classList.remove('hidden');
+                        orderBanner.classList.add('flex');
+                    } else {
+                        orderBanner.classList.add('hidden');
+                        orderBanner.classList.remove('flex');
+                    }
+
+                    // Render tin nhắn cũ
+                    if (data.messages && data.messages.length > 0) {
+                        data.messages.forEach(msg => appendBubble(msg, msg.user_id === CURRENT_USER_ID));
+                    } else {
+                        appendWelcome();
+                    }
+
+                    scrollToBottom();
+                    subscribeEcho();
+                } catch (e) {
+                    loading.classList.add('hidden');
+                    console.error('Chat init error:', e);
+                }
+            }
+
+            // ── Tin nhắn chào mừng ──
+            function appendWelcome() {
+                const el = document.createElement('div');
+                el.className = 'flex items-start gap-2';
+                el.innerHTML = `
+                    <div class="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shrink-0">
+                        <i class="bi bi-headset text-white text-xs"></i>
+                    </div>
+                    <div class="bg-white text-slate-700 text-sm px-3 py-2 rounded-2xl rounded-tl-sm shadow-sm max-w-[80%]">
+                        Xin chào! Chúng tôi có thể giúp gì cho bạn? 😊
+                    </div>`;
+                messages.appendChild(el);
+            }
+
+            // ── Build bubble ──
+            function appendBubble(msg, isMe) {
+                const el  = document.createElement('div');
+                el.dataset.msgId = msg.id;
+                el.className = `flex items-end gap-2 ${isMe ? 'flex-row-reverse' : ''}`;
+
+                const avatar = msg.user && msg.user.avatar
+                    ? `/storage/${msg.user.avatar}`
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.user?.name||'?')}&background=${isMe?'6366f1':'e2e8f0'}&color=${isMe?'fff':'475569'}&size=60`;
+
+                const time = new Date(msg.created_at).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+                const safe = String(msg.content).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+
+                el.innerHTML = `
+                    <img src="${avatar}" class="w-6 h-6 rounded-full object-cover shrink-0 mb-0.5" alt="">
+                    <div class="max-w-[75%]">
+                        <div class="text-sm px-3 py-2 rounded-2xl shadow-sm leading-relaxed
+                            ${isMe ? 'bg-gradient-to-br from-indigo-500 to-violet-600 text-white rounded-br-sm' : 'bg-white text-slate-700 rounded-bl-sm'}">
+                            ${safe}
+                        </div>
+                        <p class="text-[10px] text-slate-400 mt-0.5 ${isMe?'text-right':'text-left'}">${time}</p>
+                    </div>`;
+
+                messages.appendChild(el);
+            }
+
+            function scrollToBottom() {
+                messages.scrollTop = messages.scrollHeight;
+            }
+
+            // ── Gửi tin nhắn ──
+            async function sendMessage() {
+                if (!conversationId) return;
+                const content = input.value.trim();
+                if (!content) return;
+
+                sendBtn.disabled = input.disabled = true;
+
+                try {
+                    const res  = await fetch(SEND_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':CSRF, 'X-Requested-With':'XMLHttpRequest' },
+                        body: JSON.stringify({ conversation_id: conversationId, content }),
+                    });
+                    const data = await res.json();
+                    if (data.status === 'success') {
+                        appendBubble(data.message, true);
+                        input.value = '';
+                        input.style.height = 'auto';
+                        scrollToBottom();
+                    }
+                } catch (e) {
+                    console.error('Send error:', e);
+                } finally {
+                    sendBtn.disabled = input.disabled = false;
+                    input.focus();
+                }
+            }
+
+            input?.addEventListener('keydown', e => {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+            });
+            input?.addEventListener('input', function () {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 96) + 'px';
+            });
+            sendBtn?.addEventListener('click', sendMessage);
+
+            // ── Laravel Echo realtime ──
+            function subscribeEcho() {
+                if (!conversationId || typeof window.Echo === 'undefined') return;
+                if (echoChannel) echoChannel.stopListening('MessageSent');
+
+                echoChannel = window.Echo.private(`chat.${conversationId}`)
+                    .listen('MessageSent', (e) => {
+                        const msg = e.message;
+                        if (msg.user_id === CURRENT_USER_ID) return;
+
+                        appendBubble(msg, false);
+                        scrollToBottom();
+
+                        if (!isOpen) {
+                            unreadCount++;
+                            badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+                            badge.classList.remove('hidden');
+                            badge.classList.add('flex');
+                        }
+                    });
+            }
+
+            function clearBadge() {
+                unreadCount = 0;
+                badge.classList.add('hidden');
+                badge.classList.remove('flex');
+            }
+        })();
+        </script>
+
+        {{-- Global Toast Notification (Alpine.js) --}}
+        <div x-data="{ show: false, message: '', type: 'success' }"
              @notify.window="message = $event.detail.message; type = $event.detail.type || 'success'; show = true; setTimeout(() => show = false, 3000)"
              class="fixed top-24 right-4 z-[9999] transition-all duration-300 transform"
              :class="show ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'"
@@ -45,7 +348,6 @@
                   <span x-text="message"></span>
              </div>
         </div>
-        
-        @stack('scripts')
+
     </body>
 </html>

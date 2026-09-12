@@ -12,26 +12,26 @@
             </div>
             <p class="text-sm text-gray-500">Ngày đặt: {{ $order->created_at->format('d/m/Y H:i') }}</p>
         </div>
-        <div>
+        <div class="flex items-center gap-3 flex-wrap">
             @php
                 $statusColors = [
-                    'pending' => 'bg-yellow-100 text-yellow-800 border-yellow-200',
-                    'processing' => 'bg-blue-100 text-blue-800 border-blue-200',
-                    'ready_to_pick' => 'bg-indigo-100 text-indigo-800 border-indigo-200',
-                    'shipping' => 'bg-purple-100 text-purple-800 border-purple-200',
-                    'completed' => 'bg-green-100 text-green-800 border-green-200',
-                    'cancelled' => 'bg-red-100 text-red-800 border-red-200',
+                    'pending'      => 'bg-yellow-100 text-yellow-800 border-yellow-200',
+                    'processing'   => 'bg-blue-100 text-blue-800 border-blue-200',
+                    'ready_to_pick'=> 'bg-indigo-100 text-indigo-800 border-indigo-200',
+                    'shipping'     => 'bg-purple-100 text-purple-800 border-purple-200',
+                    'completed'    => 'bg-green-100 text-green-800 border-green-200',
+                    'cancelled'    => 'bg-red-100 text-red-800 border-red-200',
                 ];
                 $statusLabels = [
-                    'pending' => 'Chờ xác nhận',
-                    'processing' => 'Đã xác nhận',
-                    'ready_to_pick' => 'Chờ lấy hàng',
-                    'shipping' => 'Đang giao hàng',
-                    'completed' => 'Đã giao thành công',
-                    'cancelled' => 'Đã hủy',
+                    'pending'      => 'Chờ xác nhận',
+                    'processing'   => 'Đã xác nhận',
+                    'ready_to_pick'=> 'Chờ lấy hàng',
+                    'shipping'     => 'Đang giao hàng',
+                    'completed'    => 'Đã giao thành công',
+                    'cancelled'    => 'Đã hủy',
                 ];
                 $colorClass = $statusColors[$order->status] ?? 'bg-gray-100 text-gray-800 border-gray-200';
-                $label = $statusLabels[$order->status] ?? ucfirst($order->status);
+                $label      = $statusLabels[$order->status] ?? ucfirst($order->status);
             @endphp
             <span class="px-4 py-2 rounded-lg text-sm font-bold border {{ $colorClass }} flex items-center gap-2">
                 @if($order->status == 'completed')
@@ -43,6 +43,15 @@
                 @endif
                 {{ $label }}
             </span>
+
+            {{-- Nút hỏi về đơn hàng này --}}
+            <button id="btn-ask-order" data-order-id="{{ $order->id }}"
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold
+                       bg-indigo-50 text-indigo-700 border border-indigo-200
+                       hover:bg-indigo-100 hover:border-indigo-300 transition-colors">
+                <i class="bi bi-chat-dots-fill"></i>
+                Hỏi về đơn hàng này
+            </button>
         </div>
     </div>
 
@@ -81,13 +90,26 @@
                 <p class="text-gray-600 mb-2">Phương thức thanh toán: 
                     <span class="font-medium text-gray-900 uppercase">{{ $order->payment_method }}</span>
                 </p>
-                <p class="text-gray-600">Trạng thái thanh toán: 
+                <p class="text-gray-600 mb-2">Trạng thái thanh toán: 
                     @if($order->payment_status == 'paid')
                         <span class="text-green-600 font-medium">Đã thanh toán</span>
                     @else
                         <span class="text-yellow-600 font-medium">Chưa thanh toán</span>
                     @endif
                 </p>
+                @if($order->payment_status != 'paid' && $order->status != 'cancelled' && in_array($order->payment_method, ['momo', 'payos']))
+                    <div class="mt-4 pt-3 border-t border-gray-100">
+                        @if($order->payment_method == 'momo')
+                            <a href="{{ route('momo.pay_again', $order->id) }}" class="inline-flex items-center gap-2 bg-[#a50064] text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-opacity-90 transition-colors">
+                                <i class="bi bi-wallet2"></i> Thanh toán lại MoMo
+                            </a>
+                        @elseif($order->payment_method == 'payos')
+                            <a href="{{ route('payos.create', $order->id) }}" class="inline-flex items-center gap-2 bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                <i class="bi bi-qr-code-scan"></i> Thanh toán lại PayOS
+                            </a>
+                        @endif
+                    </div>
+                @endif
             </div>
         </div>
     </div>
@@ -154,3 +176,17 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.getElementById('btn-ask-order')?.addEventListener('click', function () {
+    const orderId = parseInt(this.dataset.orderId);
+    // Dispatch sự kiện để chat widget (trong layout) bắt lấy và mở
+    document.dispatchEvent(new CustomEvent('openChatForOrder', { detail: { orderId } }));
+
+    // Cuộn xuống để thấy widget (mobile)
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+});
+</script>
+@endpush
+

@@ -265,6 +265,11 @@
                                     <input type="file" name="thumbnail" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" accept="image/*">
                                     <p class="mt-2 text-sm text-gray-500 dark:text-gray-400"><i class="bi bi-info-circle mr-1"></i>Tải lên ảnh mới nếu bạn muốn thay đổi ảnh hiện tại.</p>
                                 </div>
+
+                                <div class="flex justify-end gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                    <button type="button" data-modal-hide="editVariantModal{{ $variant->id }}" class="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600">Hủy</button>
+                                    <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Lưu Thay Đổi</button>
+                                </div>
                             </form>
                         </x-admin.modal>
                     @endforeach
@@ -277,34 +282,99 @@
 
 
 <!-- Modal Create Variant -->
-<x-admin.modal id="createVariantModal" title="Thêm Biến Thể Mới">
+<x-admin.modal id="createVariantModal" title="Thêm Biến Thể Mới" size="xl">
     <form action="{{ route('admin.products.variants.store', $product->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <x-admin.select name="color_id" label="Màu sắc" required="true">
-                <option value="">-- Chọn màu --</option>
-                @foreach($colors as $color) <option value="{{ $color->id }}">{{ $color->name }}</option> @endforeach
-            </x-admin.select>
-            
-            <x-admin.select name="size_id" label="Kích cỡ" required="true">
-                <option value="">-- Chọn kích cỡ --</option>
-                @foreach($sizes as $size) <option value="{{ $size->id }}">{{ $size->name }}</option> @endforeach
-            </x-admin.select>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <x-admin.input type="number" name="price" label="Giá bán (VNĐ)" required="true" min="0" placeholder="VD: 550000" />
-            <x-admin.input type="number" name="stock_quantity" label="Tồn kho" value="0" required="true" min="0" />
+        <div class="mb-4 flex justify-end">
+            <x-admin.button variant="outline-primary" size="sm" type="button" id="btn-generate-variants-modal" icon="bi bi-magic">
+                Tạo tổ hợp biến thể
+            </x-admin.button>
         </div>
 
-        <div class="mb-4">
-            <x-admin.input name="sku" label="Mã SKU (Tùy chọn)" placeholder="Để trống để hệ thống tự tạo mã..." />
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="block text-sm font-semibold text-gray-900 dark:text-white">Chọn Màu sắc</label>
+                    <button type="button" class="text-blue-600 hover:underline text-sm" id="btn-select-all-colors-modal">Chọn tất cả</button>
+                </div>
+                <div class="flex flex-wrap gap-3 p-4 bg-gray-50 border border-gray-200 rounded-lg dark:bg-gray-700 dark:border-gray-600" id="color-selection-modal">
+                    @foreach($colors as $color)
+                        <div class="flex items-center">
+                            <input class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 color-checkbox-modal" type="checkbox" value="{{ $color->id }}" id="modal_color_{{ $color->id }}" data-name="{{ $color->name }}">
+                            <label class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300 flex items-center" for="modal_color_{{ $color->id }}">
+                                @if($color->hex_code)
+                                <span class="inline-block w-4 h-4 rounded-full mr-2 border border-gray-300" style="background-color:{{ $color->hex_code }};"></span>
+                                @endif
+                                {{ $color->name }}
+                            </label>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+            
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="block text-sm font-semibold text-gray-900 dark:text-white">Chọn Kích cỡ (Size)</label>
+                    <button type="button" class="text-blue-600 hover:underline text-sm" id="btn-select-all-sizes-modal">Chọn tất cả</button>
+                </div>
+                <div class="flex flex-wrap gap-3 p-4 bg-gray-50 border border-gray-200 rounded-lg dark:bg-gray-700 dark:border-gray-600" id="size-selection-modal">
+                    @foreach($sizes as $size)
+                        <div class="flex items-center">
+                            <input class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 size-checkbox-modal" type="checkbox" value="{{ $size->id }}" id="modal_size_{{ $size->id }}" data-name="{{ $size->name }}">
+                            <label class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300" for="modal_size_{{ $size->id }}">{{ $size->name }}</label>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
         </div>
         
-        <div class="mb-4">
-            <label class="block mb-2 text-sm font-semibold text-gray-900 dark:text-white">Ảnh đại diện cho Biến thể này</label>
-            <input type="file" name="thumbnail" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" accept="image/*">
-            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400"><i class="bi bi-info-circle mr-1"></i>Chỉ nên dùng nếu biến thể này có màu sắc hoặc hình dáng khác rõ rệt.</p>
+        <!-- Khu vực tải ảnh theo màu -->
+        <div id="modal-color-images-section" class="mb-6 hidden">
+            <label class="block mb-2 text-sm font-semibold text-gray-900 dark:text-white">Hình ảnh theo màu sắc (Tùy chọn)</label>
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4" id="modal-color-images-container">
+                <!-- JS sẽ render các ô upload ảnh tại đây -->
+            </div>
+        </div>
+        
+        <div id="modal-bulk-setup-section" class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 mb-6 hidden">
+            <label class="block mb-3 text-sm font-semibold text-blue-700 dark:text-blue-400">Thiết lập giá chung</label>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div class="md:col-span-2">
+                    <input type="number" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" id="modal-bulk-price" min="0" placeholder="Giá (VD: 500000)">
+                </div>
+                <div class="md:col-span-1">
+                    <x-admin.button type="button" id="btn-apply-bulk-modal" variant="primary" class="w-full">Áp dụng cho tất cả</x-admin.button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="overflow-x-auto max-h-96">
+            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400 hidden" id="modal-variants-table">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 border-b border-gray-200 dark:border-gray-600">
+                    <tr>
+                        <th scope="col" class="px-6 py-3">Màu sắc</th>
+                        <th scope="col" class="px-6 py-3">Kích cỡ</th>
+                        <th scope="col" class="px-6 py-3">Giá bán <span class="text-red-500">*</span></th>
+                        <th scope="col" class="px-6 py-3">Mã SKU</th>
+                        <th scope="col" class="px-6 py-3 text-center">
+                            <button type="button" class="text-red-600 hover:text-red-800" id="btn-clear-all-variants-modal" title="Xóa tất cả biến thể">
+                                <i class="bi bi-trash text-lg"></i>
+                            </button>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="modal-variants-tbody">
+                    <!-- Dữ liệu JS sinh ra ở đây -->
+                </tbody>
+            </table>
+        </div>
+        <div id="modal-no-variant-msg" class="text-gray-500 italic text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 mb-4">
+            Vui lòng chọn ít nhất một màu sắc hoặc một kích cỡ, sau đó bấm "Tạo tổ hợp biến thể".
+        </div>
+
+        <div class="flex justify-end gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <button type="button" data-modal-hide="createVariantModal" class="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600">Hủy</button>
+            <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Lưu Các Biến Thể</button>
         </div>
     </form>
 </x-admin.modal>
@@ -338,6 +408,156 @@ document.addEventListener('DOMContentLoaded', function() {
                 reader.readAsDataURL(file);
             }
         });
+    });
+
+    // JS for Modal Create Variants
+    document.getElementById('btn-select-all-colors-modal')?.addEventListener('click', function() {
+        const checkboxes = document.querySelectorAll('.color-checkbox-modal');
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        checkboxes.forEach(cb => cb.checked = !allChecked);
+    });
+
+    document.getElementById('btn-select-all-sizes-modal')?.addEventListener('click', function() {
+        const checkboxes = document.querySelectorAll('.size-checkbox-modal');
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        checkboxes.forEach(cb => cb.checked = !allChecked);
+    });
+
+    document.getElementById('btn-generate-variants-modal')?.addEventListener('click', function() {
+        const selectedColors = Array.from(document.querySelectorAll('.color-checkbox-modal:checked')).map(cb => ({ id: cb.value, name: cb.dataset.name }));
+        const selectedSizes = Array.from(document.querySelectorAll('.size-checkbox-modal:checked')).map(cb => ({ id: cb.value, name: cb.dataset.name }));
+        
+        const tbody = document.getElementById('modal-variants-tbody');
+        const table = document.getElementById('modal-variants-table');
+        const msg = document.getElementById('modal-no-variant-msg');
+        const colorImagesSection = document.getElementById('modal-color-images-section');
+        const colorImagesContainer = document.getElementById('modal-color-images-container');
+        const bulkSetupSection = document.getElementById('modal-bulk-setup-section');
+        
+        if (selectedColors.length === 0 && selectedSizes.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Thiếu thông tin',
+                text: 'Vui lòng chọn ít nhất 1 màu sắc hoặc 1 kích cỡ.',
+                confirmButtonText: 'Đã hiểu'
+            });
+            return;
+        }
+
+        tbody.innerHTML = '';
+        colorImagesContainer.innerHTML = '';
+        
+        table.classList.remove('hidden');
+        msg.classList.add('hidden');
+        bulkSetupSection.classList.remove('hidden');
+        
+        if (selectedColors.length > 0) {
+            colorImagesSection.classList.remove('hidden');
+            selectedColors.forEach(color => {
+                const col = document.createElement('div');
+                col.className = 'md:col-span-1 flex flex-col justify-center items-center text-center relative';
+                
+                col.innerHTML = `
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm w-full p-2">
+                        <label class="block text-xs font-semibold text-gray-900 truncate w-full mb-1">${color.name}</label>
+                        <input type="file" name="color_images[${color.id}]" class="block w-full text-xs text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none modal-color-image-input" accept="image/*" data-color-id="${color.id}">
+                        <div class="mt-2 text-gray-500 text-xs img-preview-area flex items-center justify-center bg-gray-50 rounded" id="modal-preview-color-${color.id}" style="min-height: 80px;">
+                            <span>Chưa có ảnh</span>
+                        </div>
+                    </div>
+                `;
+                colorImagesContainer.appendChild(col);
+            });
+
+            document.querySelectorAll('.modal-color-image-input').forEach(input => {
+                input.addEventListener('change', function() {
+                    const colorId = this.dataset.colorId;
+                    const previewArea = document.getElementById(`modal-preview-color-${colorId}`);
+                    if (this.files && this.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            previewArea.innerHTML = `<img src="${e.target.result}" style="max-width:100%; max-height:80px; object-fit:cover; border-radius:4px;">`;
+                        }
+                        reader.readAsDataURL(this.files[0]);
+                    } else {
+                        previewArea.innerHTML = `<span>Chưa có ảnh</span>`;
+                    }
+                });
+            });
+        } else {
+            colorImagesSection.classList.add('hidden');
+        }
+
+        let variants = [];
+        if (selectedColors.length > 0 && selectedSizes.length > 0) {
+            selectedColors.forEach(c => {
+                selectedSizes.forEach(s => {
+                    variants.push({ color: c, size: s });
+                });
+            });
+        } else if (selectedColors.length > 0) {
+            selectedColors.forEach(c => variants.push({ color: c, size: null }));
+        } else {
+            selectedSizes.forEach(s => variants.push({ color: null, size: s }));
+        }
+
+        variants.forEach((v, index) => {
+            const tr = document.createElement('tr');
+            
+            const colorName = v.color ? v.color.name : '-';
+            const sizeName = v.size ? v.size.name : '-';
+            const arrayKey = (v.color ? v.color.id : '0') + '_' + (v.size ? v.size.id : '0');
+
+            tr.className = 'bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600';
+            tr.innerHTML = `
+                <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                    ${colorName}
+                    ${v.color ? `<input type="hidden" name="variants[${arrayKey}][color_id]" value="${v.color.id}">` : ''}
+                </td>
+                <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                    <span class="bg-gray-800 text-white text-xs font-medium px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">${sizeName}</span>
+                    ${v.size ? `<input type="hidden" name="variants[${arrayKey}][size_id]" value="${v.size.id}">` : ''}
+                </td>
+                <td class="px-6 py-4">
+                    <input type="number" name="variants[${arrayKey}][price]" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white modal-variant-price" required min="0" placeholder="0">
+                </td>
+                <td class="px-6 py-4">
+                    <input type="text" name="variants[${arrayKey}][sku]" class="bg-gray-100 border border-gray-300 text-gray-500 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 cursor-not-allowed dark:bg-gray-700 dark:border-gray-600" placeholder="Tự tạo" readonly>
+                </td>
+                <td class="px-6 py-4 text-center">
+                    <button type="button" class="text-red-600 hover:text-red-800 hover:bg-red-100 rounded p-1 modal-btn-remove-variant"><i class="bi bi-x-lg"></i></button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.querySelectorAll('.modal-btn-remove-variant').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.closest('tr').remove();
+                if (tbody.children.length === 0) {
+                    table.classList.add('hidden');
+                    bulkSetupSection.classList.add('hidden');
+                    msg.classList.remove('hidden');
+                    colorImagesSection.classList.add('hidden');
+                }
+            });
+        });
+    });
+
+    document.getElementById('btn-clear-all-variants-modal')?.addEventListener('click', function() {
+        document.getElementById('modal-variants-tbody').innerHTML = '';
+        document.getElementById('modal-variants-table').classList.add('hidden');
+        document.getElementById('modal-bulk-setup-section').classList.add('hidden');
+        document.getElementById('modal-color-images-section').classList.add('hidden');
+        document.getElementById('modal-no-variant-msg').classList.remove('hidden');
+    });
+
+    document.getElementById('btn-apply-bulk-modal')?.addEventListener('click', function() {
+        const bulkPrice = document.getElementById('modal-bulk-price').value;
+
+        if (bulkPrice) {
+            document.querySelectorAll('.modal-variant-price').forEach(input => input.value = bulkPrice);
+        }
     });
 });
 </script>

@@ -33,11 +33,7 @@ class HomeController extends Controller
             
         // Nếu trường status không có thì cần check lại migration Product, nhưng mình đã xem bảng Product có trường 'status'
 
-        // 4. Lấy Collections (Bộ sưu tập)
-        $collections = \App\Models\Collection::where('is_active', true)
-            ->orderBy('position', 'asc')
-            ->take(6)
-            ->get();
+
 
         // 5. Lấy danh sách ID sản phẩm đã yêu thích
         $wishlistedProductIds = [];
@@ -61,6 +57,12 @@ class HomeController extends Controller
             ->take(4)
             ->get();
 
-        return view('client.home.index', compact('flashSale', 'banners', 'featuredProducts', 'collections', 'wishlistedProductIds', 'homeCategories', 'lookbooks'));
+        // 8. Lấy tất cả sản phẩm (phân trang 12 cái 1 trang)
+        $allProducts = Product::with(['variants.color', 'variants.size', 'primaryImage'])
+            ->where('status', 'active')
+            ->orderBy('created_at', 'desc')
+            ->paginate(12);
+
+        return view('client.home.index', compact('flashSale', 'banners', 'featuredProducts', 'wishlistedProductIds', 'homeCategories', 'lookbooks', 'allProducts'));
     }
 }

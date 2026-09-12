@@ -22,6 +22,16 @@ return [
         'key' => env('RESEND_API_KEY'),
     ],
 
+    'momo' => [
+        'partner_code' => env('MOMO_PARTNER_CODE'),
+        'access_key' => env('MOMO_ACCESS_KEY'),
+        'secret_key' => env('MOMO_SECRET_KEY'),
+        'endpoint' => env('MOMO_ENDPOINT'),
+        'return_url' => env('MOMO_RETURN_URL'),
+        'notify_url' => env('MOMO_NOTIFY_URL'),
+        'verify_ssl' => env('MOMO_VERIFY_SSL', true),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

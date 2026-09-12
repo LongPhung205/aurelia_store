@@ -138,7 +138,7 @@ class CheckoutController extends Controller
             'province_id' => 'required|integer',
             'district_id' => 'required|integer',
             'ward_code' => 'required|string',
-            'payment_method' => 'required|in:cod,payos',
+            'payment_method' => 'required|in:cod,payos,momo',
             'coupon_code' => 'nullable|string',
         ]);
 
@@ -250,6 +250,10 @@ class CheckoutController extends Controller
 
             if ($request->payment_method === 'payos') {
                 return redirect()->route('payos.create', ['order' => $order->id]);
+            }
+
+            if ($request->payment_method === 'momo') {
+                return redirect()->route('momo.start', ['order' => $order->id]);
             }
 
             return redirect()->route('home')->with('success', 'Đặt hàng thành công! Đơn hàng của bạn đang chờ xác nhận (Mã đơn: ORD-' . $order->id . ')');

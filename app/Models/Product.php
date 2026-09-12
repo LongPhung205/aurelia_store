@@ -68,8 +68,4 @@ class Product extends Model
         return $this->reviews()->where('is_approved', true)->count();
     }
 
-    public function collections()
-    {
-        return $this->belongsToMany(Collection::class, 'collection_product');
-    }
 }

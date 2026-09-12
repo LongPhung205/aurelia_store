@@ -27,16 +27,51 @@ class ProductVariantController extends Controller
     public function store(StoreProductVariantRequest $request, Product $product)
     {
         $data = $request->validated();
-        $data['product_id'] = $product->id;
         
-        if ($request->hasFile('thumbnail')) {
-            $path = $request->file('thumbnail')->store('variants', 'public');
-            $data['thumbnail_url'] = $path;
+        $colorImagePaths = [];
+        if ($request->hasFile('color_images')) {
+            foreach ($request->file('color_images') as $colorId => $file) {
+                $path = $file->store('variants', 'public');
+                $colorImagePaths[$colorId] = $path;
+            }
         }
         
-        ProductVariant::create($data);
+        if (!empty($data['variants']) && is_array($data['variants'])) {
+            foreach ($data['variants'] as $variantData) {
+                $colorId = $variantData['color_id'] ?? null;
+                $sizeId = $variantData['size_id'] ?? null;
+                
+                // Get image path if uploaded for this color
+                $thumbnailUrl = $colorId && isset($colorImagePaths[$colorId]) ? $colorImagePaths[$colorId] : null;
+                
+                // Generate SKU if empty
+                $sku = $variantData['sku'] ?? null;
+                if (empty($sku)) {
+                    $color = $colorId ? \App\Models\Color::find($colorId) : null;
+                    $size = $sizeId ? \App\Models\Size::find($sizeId) : null;
+                    
+                    $skuParts = [];
+                    $skuParts[] = \Illuminate\Support\Str::slug($product->name);
+                    if ($color) $skuParts[] = \Illuminate\Support\Str::slug($color->name);
+                    if ($size) $skuParts[] = \Illuminate\Support\Str::slug($size->name);
+                    
+                    $sku = strtoupper(implode('-', $skuParts));
+                }
+
+                ProductVariant::create([
+                    'product_id' => $product->id,
+                    'color_id' => $colorId,
+                    'size_id' => $sizeId,
+                    'sku' => $sku,
+                    'price' => $variantData['price'],
+                    'stock_quantity' => 0,
+                    'thumbnail_url' => $thumbnailUrl,
+                    'is_active' => true,
+                ]);
+            }
+        }
         
-        return redirect()->back()->with('success', 'Đã thêm biến thể mới.');
+        return redirect()->back()->with('success', 'Đã thêm các biến thể mới.');
     }
 
     /**

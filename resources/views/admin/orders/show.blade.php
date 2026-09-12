@@ -257,11 +257,20 @@
                             <span class="text-sm text-slate-600 dark:text-slate-400">Phương thức:</span>
                             <span class="text-sm font-bold text-slate-800 dark:text-white uppercase">{{ $order->payment_method }}</span>
                         </div>
-                        <div class="flex items-center justify-between">
+                        <div class="flex items-center justify-between mb-3">
                             <span class="text-sm text-slate-600 dark:text-slate-400">Trạng thái:</span>
+                            @php
+                                $latestTxn = $order->transactions()->latest()->first();
+                                $hasFailedTxn = $latestTxn && $latestTxn->status === 'failed';
+                            @endphp
+                            
                             @if($order->payment_status == 'paid')
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
                                     <i class="bi bi-check-circle-fill mr-1"></i> Đã thanh toán
+                                </span>
+                            @elseif($hasFailedTxn)
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400">
+                                    <i class="bi bi-x-circle-fill mr-1"></i> Thanh toán thất bại
                                 </span>
                             @else
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">

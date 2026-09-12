@@ -102,6 +102,17 @@
                         </div>
                     </div>
                 </label>
+                <!-- MoMo -->
+                <label class="flex items-center p-4 border border-gray-200 rounded-xl cursor-pointer bg-white transition-colors hover:bg-gray-50">
+                    <input type="radio" name="payment_method" value="momo" class="w-5 h-5 text-brand focus:ring-brand border-gray-300">
+                    <div class="ml-4 flex items-center gap-3">
+                        <img src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png" alt="MoMo" class="w-8 h-8 object-contain">
+                        <div>
+                            <div class="font-bold text-gray-900">Thanh toán bằng ví MoMo / Thẻ ATM nội địa</div>
+                            <div class="text-sm text-gray-500">Thanh toán nhanh chóng, an toàn qua MoMo.</div>
+                        </div>
+                    </div>
+                </label>
             </div>
         </div>
         

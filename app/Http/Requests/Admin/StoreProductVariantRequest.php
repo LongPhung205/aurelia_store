@@ -14,37 +14,19 @@ class StoreProductVariantRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'color_id' => 'nullable|exists:colors,id',
-            'size_id' => 'nullable|exists:sizes,id',
-            'sku' => 'nullable|string|max:100|unique:product_variants,sku',
-            'barcode' => 'nullable|string|max:100|unique:product_variants,barcode',
-            'price' => 'required|numeric|min:0',
-            'sale_price' => 'nullable|numeric|min:0',
-            'stock_quantity' => 'required|integer|min:0',
-            'weight_grams' => 'nullable|integer|min:0',
-            'thumbnail_url' => 'nullable|string|max:255',
-            'is_active' => 'boolean',
+            'variants' => 'required|array|min:1',
+            'variants.*.color_id' => 'nullable|exists:colors,id',
+            'variants.*.size_id' => 'nullable|exists:sizes,id',
+            'variants.*.sku' => 'nullable|string|max:100',
+            'variants.*.price' => 'required|numeric|min:0',
+            'color_images' => 'nullable|array',
+            'color_images.*' => 'image|max:2048',
         ];
     }
 
     protected function prepareForValidation()
     {
-        if (empty($this->sku)) {
-            $product = $this->route('product');
-            $color = \App\Models\Color::find($this->color_id);
-            $size = \App\Models\Size::find($this->size_id);
-            
-            $skuParts = [];
-            if ($product) $skuParts[] = \Illuminate\Support\Str::slug($product->name);
-            if ($color) $skuParts[] = \Illuminate\Support\Str::slug($color->name);
-            if ($size) $skuParts[] = \Illuminate\Support\Str::slug($size->name);
-            
-            if (!empty($skuParts)) {
-                $this->merge([
-                    'sku' => strtoupper(implode('-', $skuParts))
-                ]);
-            }
-        }
+        // SKU auto-generation is moved to the controller for bulk creation
     }
 }
 

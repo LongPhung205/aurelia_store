@@ -62,13 +62,25 @@ Route::prefix('payos')->name('payos.')->group(function () {
     Route::post('/webhook', [Client\PayOSController::class, 'webhook'])->name('webhook');
 });
 
+// MoMo Routes
+Route::prefix('payment/momo')->name('momo.')->group(function () {
+    Route::get('/start/{order}', [Client\MomoController::class, 'start'])->name('start');
+    Route::get('/pay-again/{order}', [Client\MomoController::class, 'payAgain'])->name('pay_again');
+    Route::get('/return', [Client\MomoController::class, 'callback'])->name('return');
+    Route::post('/notify', [Client\MomoController::class, 'ipn'])->name('notify');
+});
+
 
 
 // Product Detail Route
 Route::get('/products/{slug}', [Client\ProductController::class, 'show'])->name('products.show');
-Route::get('/collections/{slug}', [Client\CollectionController::class, 'show'])->name('collections.show');
+Route::get('/danh-muc/{slug}', [Client\CategoryController::class, 'show'])->name('categories.show');
 
 Route::middleware('auth')->group(function () {
+    // Chat Routes (phía khách hàng)
+    Route::post('/chat/open', [Client\ClientChatController::class, 'openOrCreate'])->name('client.chat.open');
+    Route::post('/chat/send', [Client\ClientChatController::class, 'sendMessage'])->name('client.chat.send');
+
     // Client Profile Routes
     Route::get('/profile', [Client\ProfileController::class, 'index'])->name('profile.index');
     Route::post('/profile/update', [Client\ProfileController::class, 'update'])->name('profile.update');
@@ -136,7 +148,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     // Marketing Routes
     Route::resource('coupons', Admin\CouponController::class);
     Route::resource('flash_sales', Admin\FlashSaleController::class);
-    Route::resource('collections', Admin\CollectionController::class);
     Route::get('flash_sales/{flash_sale}/items', [Admin\FlashSaleController::class, 'manageItems'])->name('flash_sales.items');
     Route::post('flash_sales/{flash_sale}/items', [Admin\FlashSaleController::class, 'addItem'])->name('flash_sales.items.store');
     Route::delete('flash_sales/{flash_sale}/items/{item}', [Admin\FlashSaleController::class, 'removeItem'])->name('flash_sales.items.destroy');
@@ -150,6 +161,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
 
     // Posts (Lookbook/Tạp chí)
     Route::resource('posts', Admin\PostController::class);
+
+    // Chat / CSKH (phía Admin)
+    Route::get('chat', [Admin\AdminChatController::class, 'index'])->name('chat.index');
+    Route::patch('chat/{conversation}/close', [Admin\AdminChatController::class, 'toggleStatus'])->name('chat.close');
+    Route::post('chat/send', [Admin\AdminChatController::class, 'sendMessage'])->name('chat.send');
 });
 
 require __DIR__.'/auth.php';

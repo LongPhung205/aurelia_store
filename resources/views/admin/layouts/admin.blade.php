@@ -282,12 +282,17 @@
                     </li>
                     
                     <li>
-                        <a href="#" class="flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-200 font-normal">
+                        <a href="{{ route('admin.chat.index') }}" class="flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-200 group {{ request()->routeIs('admin.chat.*') ? 'text-primary-700 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-200 font-normal' }}">
                             <div class="flex items-center gap-3 text-sm">
-                                <i class="bi bi-chat-square-text text-base text-slate-400 dark:text-slate-500 group-hover:text-slate-500 dark:group-hover:text-slate-400"></i>
+                                <i class="bi bi-chat-square-text text-base {{ request()->routeIs('admin.chat.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-500 dark:group-hover:text-slate-400' }}"></i>
                                 <span>Messages</span>
                             </div>
-                            <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-semibold text-white bg-primary-500 rounded-full">9</span>
+                            @php
+                                $unreadTotal = \App\Models\Conversation::where('status','open')->count();
+                            @endphp
+                            @if($unreadTotal > 0)
+                            <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-semibold text-white bg-primary-500 rounded-full">{{ $unreadTotal > 9 ? '9+' : $unreadTotal }}</span>
+                            @endif
                         </a>
                     </li>
 
@@ -396,9 +401,9 @@
                 <div class="mt-4">
                     <button type="button" class="flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-slate-800 dark:text-slate-200 transition-colors group" aria-controls="dropdown-marketing" data-collapse-toggle="dropdown-marketing">
                         <span>Marketing & Khuyến mãi</span>
-                        <i class="bi bi-chevron-down text-[10px] text-slate-400 transition-transform duration-200 {{ request()->routeIs('coupons.*') || request()->routeIs('flash_sales.*') || request()->routeIs('banners.*') || request()->routeIs('collections.*') || request()->routeIs('posts.*') ? 'rotate-180' : 'group-data-[collapse-open]:rotate-180' }}"></i>
+                        <i class="bi bi-chevron-down text-[10px] text-slate-400 transition-transform duration-200 {{ request()->routeIs('coupons.*') || request()->routeIs('flash_sales.*') || request()->routeIs('banners.*') || request()->routeIs('posts.*') ? 'rotate-180' : 'group-data-[collapse-open]:rotate-180' }}"></i>
                     </button>
-                    <ul id="dropdown-marketing" class="{{ request()->routeIs('coupons.*') || request()->routeIs('flash_sales.*') || request()->routeIs('banners.*') || request()->routeIs('collections.*') || request()->routeIs('posts.*') ? '' : 'hidden' }} space-y-1 py-1 mt-1">
+                    <ul id="dropdown-marketing" class="{{ request()->routeIs('coupons.*') || request()->routeIs('flash_sales.*') || request()->routeIs('banners.*') || request()->routeIs('posts.*') ? '' : 'hidden' }} space-y-1 py-1 mt-1">
                         <li>
                             <a href="{{ route('admin.banners.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('banners.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
                                 <i class="bi bi-image text-base {{ request()->routeIs('banners.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
@@ -417,12 +422,7 @@
                                 <span>Flash Sale</span>
                             </a>
                         </li>
-                        <li>
-                            <a href="{{ route('admin.collections.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('collections.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
-                                <i class="bi bi-collection text-base {{ request()->routeIs('collections.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
-                                <span>Bộ sưu tập</span>
-                            </a>
-                        </li>
+
                         <li>
                             <a href="{{ route('admin.posts.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('posts.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
                                 <i class="bi bi-journal-text text-base {{ request()->routeIs('posts.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
@@ -459,7 +459,7 @@
     </aside>
 
     <!-- Main Content -->
-    <div class="p-4 sm:ml-[272px] mt-14">
+    <div class="@yield('content_class', 'p-4 sm:ml-[272px] mt-14')">
 
 
         @yield('content')
