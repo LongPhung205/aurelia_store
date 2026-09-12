@@ -112,9 +112,7 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(function () {
-    Route::get('/', function () {
-        return redirect()->route('admin.products.index');
-    })->name('dashboard');
+    Route::get('/', [Admin\DashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('categories', Admin\CategoryController::class);
     Route::get('attributes', [Admin\AttributeController::class, 'index'])->name('attributes.index');

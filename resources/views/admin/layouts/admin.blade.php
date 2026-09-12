@@ -205,7 +205,7 @@
         <div class="px-3 pt-4 pb-2 shrink-0">
             <!-- Logo -->
             <div class="flex items-center justify-between px-2 mb-6">
-                <a href="{{ url('/') }}" class="flex items-center gap-3">
+                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3">
                     <img src="{{ asset('images/nenlogoaureliawwhite.png') }}" alt="Aurelia Logo" class="h-10 w-auto object-contain">
                     <span class="text-2xl font-bold whitespace-nowrap text-slate-800 dark:text-white tracking-tight leading-none mt-1">Aurelia</span>
                 </a>
@@ -273,9 +273,9 @@
                 <!-- Main Menu -->
                 <ul class="space-y-1 font-medium mt-2">
                     <li>
-                        <a href="{{ url('/') }}" class="flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-200 group {{ request()->is('/') ? 'text-primary-700 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-200 font-normal' }}">
+                        <a href="{{ route('admin.dashboard') }}" class="flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-200 group {{ request()->routeIs('admin.dashboard') ? 'text-primary-700 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-200 font-normal' }}">
                             <div class="flex items-center gap-3 text-sm">
-                                <i class="bi bi-grid text-base {{ request()->is('/') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400 dark:text-slate-500' }}"></i>
+                                <i class="bi bi-grid text-base {{ request()->routeIs('admin.dashboard') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400 dark:text-slate-500' }}"></i>
                                 <span>Dashboard</span>
                             </div>
                         </a>
