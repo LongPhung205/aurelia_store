@@ -39,4 +39,14 @@ class Coupon extends Model
 
         return true;
     }
+
+    public function calculateDiscount($subtotal)
+    {
+        if (!$this->isValid($subtotal)) return 0;
+        
+        $discount = $this->type === 'percent' ? ($subtotal * $this->value) / 100 : $this->value;
+        if ($this->max_discount && $discount > $this->max_discount) $discount = $this->max_discount;
+        
+        return min($discount, $subtotal);
+    }
 }

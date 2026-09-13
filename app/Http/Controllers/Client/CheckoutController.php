@@ -165,23 +165,9 @@ class CheckoutController extends Controller
         $couponId = null;
 
         if ($request->filled('coupon_code')) {
-            $coupon = Coupon::where('code', $request->coupon_code)
-                ->where('is_active', true)
-                ->where('start_time', '<=', now())
-                ->where('end_time', '>=', now())
-                ->first();
-                
-            if ($coupon && (!$coupon->min_order_value || $subtotal >= $coupon->min_order_value) && ($coupon->usage_limit === null || $coupon->used_count < $coupon->usage_limit)) {
-                if ($coupon->type === 'percent') {
-                    $discount = ($subtotal * $coupon->value) / 100;
-                    if ($coupon->max_discount && $discount > $coupon->max_discount) {
-                        $discount = $coupon->max_discount;
-                    }
-                } else {
-                    $discount = $coupon->value;
-                }
-                
-                if ($discount > $subtotal) $discount = $subtotal;
+            $coupon = Coupon::where('code', $request->coupon_code)->first();
+            if ($coupon && $coupon->isValid($subtotal)) {
+                $discount = $coupon->calculateDiscount($subtotal);
                 $couponId = $coupon->id;
             }
         }

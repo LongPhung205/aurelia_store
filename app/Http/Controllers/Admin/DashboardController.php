@@ -51,17 +51,10 @@ class DashboardController extends Controller
             ->groupBy('date')
             ->orderBy('date', 'asc')
             ->get();
-
-        // Chuẩn bị mảng 30 ngày để lấp đầy ngày không có doanh thu
-        $dates = [];
-        $revenues = [];
         $tempRevenue = $revenueData->pluck('revenue', 'date')->toArray();
-
-        for ($i = 0; $i < 30; $i++) {
-            $dateString = Carbon::now()->subDays(29 - $i)->format('Y-m-d');
-            $dates[] = Carbon::parse($dateString)->format('d/m');
-            $revenues[] = $tempRevenue[$dateString] ?? 0;
-        }
+        $period = \Carbon\CarbonPeriod::create(now()->subDays(29), now());
+        $dates = collect($period)->map->format('d/m')->toArray();
+        $revenues = collect($period)->map(fn($date) => $tempRevenue[$date->format('Y-m-d')] ?? 0)->toArray();
 
         $revenueChartData = [
             'labels' => $dates,

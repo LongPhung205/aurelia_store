@@ -546,71 +546,18 @@
     
     <!-- Theme Switcher Logic -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const themeToggleBtn = document.getElementById('theme-toggle');
-            const themeToggleIcon = document.getElementById('theme-toggle-icon');
-            const themeBtns = document.querySelectorAll('.theme-btn');
-            
-            // Function to set icon based on current theme preference
-            const updateThemeIcon = (theme) => {
-                themeToggleIcon.className = 'text-lg'; // reset classes
-                if (theme === 'light') {
-                    themeToggleIcon.classList.add('bi', 'bi-sun-fill');
-                } else if (theme === 'dark') {
-                    themeToggleIcon.classList.add('bi', 'bi-moon-stars-fill');
-                } else {
-                    themeToggleIcon.classList.add('bi', 'bi-circle-half');
-                }
-                
-                // Highlight active option
-                themeBtns.forEach(btn => {
-                    if(btn.dataset.themeValue === theme) {
-                        btn.classList.add('text-primary-600', 'dark:text-primary-400', 'bg-slate-50', 'dark:bg-slate-800');
-                    } else {
-                        btn.classList.remove('text-primary-600', 'dark:text-primary-400', 'bg-slate-50', 'dark:bg-slate-800');
-                    }
-                });
+        document.addEventListener('DOMContentLoaded', function() {
+            window.setTheme = (t) => {
+                localStorage.setItem('color-theme', t);
+                let isDark = t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.classList.toggle('dark', isDark);
+                document.getElementById('theme-toggle-icon').className = t === 'light' ? 'bi bi-sun-fill text-lg' : (t === 'dark' ? 'bi bi-moon-stars-fill text-lg' : 'bi bi-display text-lg');
             };
-
-            // Get initial theme from localStorage or default to system
-            let currentTheme = localStorage.getItem('color-theme') || 'system';
-            updateThemeIcon(currentTheme);
-
-            // Handle theme button clicks
-            themeBtns.forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const selectedTheme = e.currentTarget.dataset.themeValue;
-                    
-                    if (selectedTheme === 'light') {
-                        document.documentElement.classList.remove('dark');
-                        localStorage.setItem('color-theme', 'light');
-                    } else if (selectedTheme === 'dark') {
-                        document.documentElement.classList.add('dark');
-                        localStorage.setItem('color-theme', 'dark');
-                    } else {
-                        // System
-                        localStorage.removeItem('color-theme');
-                        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                            document.documentElement.classList.add('dark');
-                        } else {
-                            document.documentElement.classList.remove('dark');
-                        }
-                    }
-                    
-                    updateThemeIcon(selectedTheme);
-                });
-            });
-
-            // Listen for system preference changes if 'system' is selected
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-                if (!localStorage.getItem('color-theme')) {
-                    if (e.matches) {
-                        document.documentElement.classList.add('dark');
-                    } else {
-                        document.documentElement.classList.remove('dark');
-                    }
-                }
-            });
+            
+            setTheme(localStorage.getItem('color-theme') || 'system');
+            
+            document.querySelectorAll('.theme-btn').forEach(b => b.onclick = (e) => setTheme(e.currentTarget.dataset.themeValue));
+            window.matchMedia('(prefers-color-scheme: dark)').onchange = () => { if(localStorage.getItem('color-theme') === 'system') setTheme('system'); };
         });
 
         function markNotificationAsRead(id, element) {
