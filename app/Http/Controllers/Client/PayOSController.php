@@ -72,6 +72,8 @@ class PayOSController extends Controller
             $order = Order::with(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size'])
                 ->where('shipping_order_code', $orderCode)
                 ->first();
+            
+            if ($order && $order->user_id !== auth()->id()) abort(403);
         }
 
         // When user successfully pays, PayOS redirects here
@@ -87,6 +89,8 @@ class PayOSController extends Controller
             $order = Order::with(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size'])
                 ->where('shipping_order_code', $orderCode)
                 ->first();
+
+            if ($order && $order->user_id !== auth()->id()) abort(403);
         }
 
         // When user cancels payment

@@ -26,6 +26,11 @@ class ClientChatController extends Controller
         $user    = Auth::user();
         $orderId = $request->order_id;
 
+        if ($orderId) {
+            $order = \App\Models\Order::where('id', $orderId)->where('user_id', $user->id)->first();
+            if (!$order) abort(403, 'Unauthorized access to this order.');
+        }
+
         // Tìm conversation phù hợp đang mở
         $query = Conversation::where('user_id', $user->id)
                               ->where('status', 'open');
