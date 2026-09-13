@@ -39,7 +39,7 @@ class ReleaseUnpaidOrders extends Command
         );
 
         // Find orders created more than 30 minutes ago that are still pending
-        $orders = Order::where('payment_method', 'payos')
+        $orders = Order::whereIn('payment_method', ['payos', 'momo'])
             ->where('payment_status', 'pending')
             ->where('created_at', '<', now()->subMinutes(30))
             ->get();
@@ -50,11 +50,10 @@ class ReleaseUnpaidOrders extends Command
         }
 
         foreach ($orders as $order) {
-            $this->info("Processing order #{$order->id} (Code: {$order->shipping_order_code})");
+            $this->info("Processing order #{$order->id} (Method: {$order->payment_method})");
 
             try {
-                // 1. Double check with PayOS API to see if it was actually paid (Webhook missed/delayed)
-                if ($order->shipping_order_code) {
+                if ($order->payment_method === 'payos' && $order->shipping_order_code) {
                     try {
                         $paymentInfo = $payOS->getPaymentLinkInformation($order->shipping_order_code);
                         
@@ -67,7 +66,6 @@ class ReleaseUnpaidOrders extends Command
                             continue; // Skip cancellation
                         }
                     } catch (\Exception $e) {
-                        // PayOS might throw exception if orderCode not found or invalid
                         Log::warning("PayOS API check failed for Order #{$order->id}: " . $e->getMessage());
                     }
                 }

@@ -27,51 +27,52 @@ class ProductVariantController extends Controller
     public function store(StoreProductVariantRequest $request, Product $product)
     {
         $data = $request->validated();
-        
+        if (empty($data['variants']) || !is_array($data['variants'])) return redirect()->back();
+
         $colorImagePaths = [];
         if ($request->hasFile('color_images')) {
             foreach ($request->file('color_images') as $colorId => $file) {
-                $path = $file->store('variants', 'public');
-                $colorImagePaths[$colorId] = $path;
+                $colorImagePaths[$colorId] = $file->store('variants', 'public');
             }
         }
         
-        if (!empty($data['variants']) && is_array($data['variants'])) {
+        $colorIds = collect($data['variants'])->pluck('color_id')->filter()->unique();
+        $sizeIds = collect($data['variants'])->pluck('size_id')->filter()->unique();
+        
+        $colors = \App\Models\Color::whereIn('id', $colorIds)->pluck('name', 'id');
+        $sizes = \App\Models\Size::whereIn('id', $sizeIds)->pluck('name', 'id');
+        $productSlug = \Illuminate\Support\Str::slug($product->name);
+
+        \Illuminate\Support\Facades\DB::transaction(function() use ($data, $product, $colorImagePaths, $colors, $sizes, $productSlug) {
             foreach ($data['variants'] as $variantData) {
                 $colorId = $variantData['color_id'] ?? null;
                 $sizeId = $variantData['size_id'] ?? null;
                 
-                // Get image path if uploaded for this color
-                $thumbnailUrl = $colorId && isset($colorImagePaths[$colorId]) ? $colorImagePaths[$colorId] : null;
-                
-                // Generate SKU if empty
                 $sku = $variantData['sku'] ?? null;
                 if (empty($sku)) {
-                    $color = $colorId ? \App\Models\Color::find($colorId) : null;
-                    $size = $sizeId ? \App\Models\Size::find($sizeId) : null;
-                    
-                    $skuParts = [];
-                    $skuParts[] = \Illuminate\Support\Str::slug($product->name);
-                    if ($color) $skuParts[] = \Illuminate\Support\Str::slug($color->name);
-                    if ($size) $skuParts[] = \Illuminate\Support\Str::slug($size->name);
-                    
-                    $sku = strtoupper(implode('-', $skuParts));
+                    $skuParts = [$productSlug];
+                    if ($colorId && isset($colors[$colorId])) $skuParts[] = \Illuminate\Support\Str::slug($colors[$colorId]);
+                    if ($sizeId && isset($sizes[$sizeId])) $skuParts[] = \Illuminate\Support\Str::slug($sizes[$sizeId]);
+                    $sku = strtoupper($product->id . '-' . implode('-', $skuParts));
                 }
 
-                ProductVariant::create([
+                $variant = ProductVariant::firstOrNew([
                     'product_id' => $product->id,
                     'color_id' => $colorId,
                     'size_id' => $sizeId,
-                    'sku' => $sku,
-                    'price' => $variantData['price'],
-                    'stock_quantity' => 0,
-                    'thumbnail_url' => $thumbnailUrl,
-                    'is_active' => true,
                 ]);
+
+                $variant->sku = $sku;
+                $variant->price = $variantData['price'];
+                $variant->is_active = true;
+                if (!$variant->exists) $variant->stock_quantity = 0;
+                if ($colorId && isset($colorImagePaths[$colorId])) $variant->thumbnail_url = $colorImagePaths[$colorId];
+                
+                $variant->save();
             }
-        }
+        });
         
-        return redirect()->back()->with('success', 'Đã thêm các biến thể mới.');
+        return redirect()->back()->with('success', 'Đã lưu các biến thể thành công.');
     }
 
     /**
