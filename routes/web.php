@@ -164,6 +164,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::get('chat', [Admin\AdminChatController::class, 'index'])->name('chat.index');
     Route::patch('chat/{conversation}/close', [Admin\AdminChatController::class, 'toggleStatus'])->name('chat.close');
     Route::post('chat/send', [Admin\AdminChatController::class, 'sendMessage'])->name('chat.send');
+    
+    // Notifications
+    Route::get('notifications', [Admin\NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('notifications/{id}/read', [Admin\NotificationController::class, 'markAsRead'])->name('notifications.mark_read');
+    Route::post('notifications/mark-all-read', [Admin\NotificationController::class, 'markAllAsRead'])->name('notifications.mark_all_read');
 });
 
 require __DIR__.'/auth.php';

@@ -100,71 +100,78 @@
                 </div>
                 <div class="flex items-center">
                     <!-- Notifications Dropdown -->
+                    @php
+                        $unreadNotificationsCount = auth()->user()->unreadNotifications->count();
+                        $recentNotifications = auth()->user()->notifications()->take(5)->get();
+                    @endphp
                     <button type="button" data-dropdown-toggle="notification-dropdown" class="p-2 mr-1 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg focus:outline-none focus:ring-4 focus:ring-slate-200 dark:focus:ring-slate-700 relative transition-colors">
                         <i class="bi bi-bell text-lg"></i>
                         <!-- Notification Badge -->
-                        @if(session('success') || session('error') || session('status'))
-                        <div class="absolute inline-flex items-center justify-center w-2 h-2 bg-rose-500 border-2 border-white dark:border-slate-800 rounded-full top-2 right-2"></div>
+                        @if($unreadNotificationsCount > 0)
+                        <div class="absolute inline-flex items-center justify-center w-4 h-4 text-[9px] font-bold text-white bg-rose-500 border-2 border-white dark:border-slate-800 rounded-full -top-1 -right-1">{{ $unreadNotificationsCount > 9 ? '9+' : $unreadNotificationsCount }}</div>
                         @endif
                     </button>
                     
                     <!-- Notification Dropdown menu -->
-                    <div id="notification-dropdown" class="z-50 hidden my-4 w-72 max-w-sm text-base list-none bg-white divide-y divide-slate-100 rounded-lg shadow-lg dark:bg-slate-700 dark:divide-slate-600 border border-slate-100 dark:border-slate-600">
-                        <div class="block px-4 py-2 font-medium text-center text-slate-700 bg-slate-50 dark:bg-slate-700 dark:text-white rounded-t-lg">
-                            Thông báo
-                        </div>
-                        <div class="divide-y divide-slate-100 dark:divide-slate-600 max-h-64 overflow-y-auto">
-                            @if(session('success'))
-                            <a href="#" class="flex px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">
-                                <div class="flex-shrink-0">
-                                    <div class="w-9 h-9 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                                        <i class="bi bi-check-circle"></i>
-                                    </div>
-                                </div>
-                                <div class="w-full pl-3">
-                                    <div class="text-slate-500 text-sm mb-1.5 dark:text-slate-300">{{ session('success') }}</div>
-                                    <div class="text-xs text-emerald-600 dark:text-emerald-400">Vừa xong</div>
-                                </div>
-                            </a>
-                            @endif
-
-                            @if(session('error'))
-                            <a href="#" class="flex px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">
-                                <div class="flex-shrink-0">
-                                    <div class="w-9 h-9 rounded-full bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center text-rose-600 dark:text-rose-400">
-                                        <i class="bi bi-exclamation-circle"></i>
-                                    </div>
-                                </div>
-                                <div class="w-full pl-3">
-                                    <div class="text-slate-500 text-sm mb-1.5 dark:text-slate-300">{{ session('error') }}</div>
-                                    <div class="text-xs text-rose-600 dark:text-rose-400">Vừa xong</div>
-                                </div>
-                            </a>
-                            @endif
-
-                            @if(session('status'))
-                            <a href="#" class="flex px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">
-                                <div class="flex-shrink-0">
-                                    <div class="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                                        <i class="bi bi-info-circle"></i>
-                                    </div>
-                                </div>
-                                <div class="w-full pl-3">
-                                    <div class="text-slate-500 text-sm mb-1.5 dark:text-slate-300">{{ session('status') }}</div>
-                                    <div class="text-xs text-blue-600 dark:text-blue-400">Vừa xong</div>
-                                </div>
-                            </a>
-                            @endif
-
-                            @if(!session('success') && !session('error') && !session('status'))
-                            <div class="px-4 py-4 text-center text-sm text-slate-500 dark:text-slate-400">
-                                Không có thông báo mới
-                            </div>
+                    <div id="notification-dropdown" class="z-50 hidden my-4 w-80 max-w-sm text-base list-none bg-white divide-y divide-slate-100 rounded-xl shadow-xl dark:bg-slate-800 dark:divide-slate-700 border border-slate-100 dark:border-slate-700">
+                        <div class="flex items-center justify-between px-4 py-3 font-medium text-slate-700 bg-slate-50 dark:bg-slate-800 dark:text-white rounded-t-xl border-b border-slate-100 dark:border-slate-700">
+                            <span>Thông báo</span>
+                            @if($unreadNotificationsCount > 0)
+                            <form action="{{ route('admin.notifications.mark_all_read') }}" method="POST" class="m-0">
+                                @csrf
+                                <button type="submit" class="text-xs text-primary-600 dark:text-primary-400 hover:underline">Đánh dấu đã đọc</button>
+                            </form>
                             @endif
                         </div>
-                        <a href="#" class="block py-2 text-sm font-medium text-center text-slate-900 bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-white rounded-b-lg transition-colors">
+                        <div class="divide-y divide-slate-100 dark:divide-slate-700 max-h-80 overflow-y-auto custom-scrollbar">
+                            @forelse($recentNotifications as $notification)
+                                @php
+                                    $isUnread = is_null($notification->read_at);
+                                    $data = $notification->data;
+                                    $type = $data['type'] ?? 'default';
+                                    
+                                    $iconClass = 'bi-bell';
+                                    $bgClass = 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400';
+                                    
+                                    if ($type === 'new_order') {
+                                        $iconClass = 'bi-cart-check';
+                                        $bgClass = 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400';
+                                    } elseif ($type === 'new_message') {
+                                        $iconClass = 'bi-chat-dots';
+                                        $bgClass = 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400';
+                                    } elseif ($type === 'low_stock') {
+                                        $iconClass = 'bi-exclamation-triangle';
+                                        $bgClass = 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400';
+                                    }
+                                @endphp
+                                <a href="{{ $data['url'] ?? '#' }}" onclick="markNotificationAsRead('{{ $notification->id }}', this)" class="flex px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors relative {{ $isUnread ? 'bg-primary-50/30 dark:bg-primary-900/10' : '' }}">
+                                    @if($isUnread)
+                                        <div class="absolute w-2 h-2 rounded-full bg-primary-600 top-4 right-4 notification-dot"></div>
+                                    @endif
+                                    <div class="flex-shrink-0 mt-1">
+                                        <div class="w-9 h-9 rounded-full {{ $bgClass }} flex items-center justify-center">
+                                            <i class="bi {{ $iconClass }}"></i>
+                                        </div>
+                                    </div>
+                                    <div class="w-full pl-3 pr-4">
+                                        <div class="text-sm mb-1 text-slate-800 dark:text-slate-200 {{ $isUnread ? 'font-semibold' : '' }} line-clamp-2">
+                                            {{ $data['message'] ?? 'Bạn có thông báo mới' }}
+                                        </div>
+                                        <div class="text-xs text-slate-500 dark:text-slate-400">
+                                            {{ $notification->created_at->diffForHumans() }}
+                                        </div>
+                                    </div>
+                                </a>
+                            @empty
+                                <div class="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400 flex flex-col items-center">
+                                    <i class="bi bi-bell-slash text-3xl mb-2 text-slate-300 dark:text-slate-600"></i>
+                                    <span>Không có thông báo nào</span>
+                                </div>
+                            @endforelse
+                        </div>
+                        <a href="{{ route('admin.notifications.index') }}" class="block py-2.5 text-sm font-medium text-center text-slate-900 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-white rounded-b-xl transition-colors border-t border-slate-100 dark:border-slate-700">
                             <div class="inline-flex items-center">
-                                <i class="bi bi-eye mr-2"></i>Xem tất cả
+                                Xem tất cả thông báo
                             </div>
                         </a>
                     </div>
@@ -605,6 +612,20 @@
                 }
             });
         });
+
+        function markNotificationAsRead(id, element) {
+            axios.post(`/admin/notifications/${id}/read`)
+                .then(response => {
+                    if(response.data.success) {
+                        element.classList.remove('bg-primary-50/30', 'dark:bg-primary-900/10');
+                        let dot = element.querySelector('.notification-dot');
+                        if (dot) dot.remove();
+                        let title = element.querySelector('.line-clamp-2');
+                        if (title) title.classList.remove('font-semibold');
+                    }
+                })
+                .catch(error => console.error('Error marking notification as read:', error));
+        }
     </script>
     
     @stack('scripts')

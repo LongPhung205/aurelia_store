@@ -113,6 +113,18 @@ class ClientChatController extends Controller
 
         broadcast(new MessageSent($message->load('user')))->toOthers();
 
+        // Notify Admins
+        try {
+            $admins = \App\Models\User::where('role', 'admin')->get();
+            if ($admins->count() > 0) {
+                // To avoid spam, maybe we should only notify if there is no recent notification for this conversation?
+                // But simple implementation is just to send it.
+                \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\NewMessageNotification($message));
+            }
+        } catch (\Exception $e) {
+            // ignore
+        }
+
         return response()->json([
             'status'  => 'success',
             'message' => $message->load('user'),

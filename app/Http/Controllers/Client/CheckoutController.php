@@ -248,6 +248,24 @@ class CheckoutController extends Controller
 
             DB::commit();
 
+            // Notifications
+            try {
+                $admins = \App\Models\User::where('role', 'admin')->get();
+                if ($admins->count() > 0) {
+                    \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\NewOrderNotification($order));
+                    
+                    foreach ($cartItems as $item) {
+                        $variant = \App\Models\ProductVariant::find($item->productVariant->id);
+                        if ($variant && $variant->stock_quantity <= 10) {
+                            \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\LowStockNotification($variant));
+                        }
+                    }
+                }
+            } catch (\Exception $notifyException) {
+                \Illuminate\Support\Facades\Log::error('Notification Error: ' . $notifyException->getMessage());
+            }
+
+
             if ($request->payment_method === 'payos') {
                 return redirect()->route('payos.create', ['order' => $order->id]);
             }
