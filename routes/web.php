@@ -139,6 +139,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::get('transactions', [Admin\TransactionController::class, 'index'])->name('transactions.index');
     Route::patch('transactions/{transaction}', [Admin\TransactionController::class, 'update'])->name('transactions.update');
 
+    // Analytics & Reports
+    Route::get('analytics', [Admin\AnalyticsController::class, 'index'])->name('analytics.index');
+    Route::get('analytics/export', [Admin\AnalyticsController::class, 'export'])->name('analytics.export');
+
     // Warehouse & Inventory Routes
     Route::resource('imports', Admin\ImportController::class);
     Route::get('inventory', [Admin\InventoryController::class, 'index'])->name('inventory.index');
