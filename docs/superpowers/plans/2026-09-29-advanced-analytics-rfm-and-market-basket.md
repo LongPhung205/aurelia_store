@@ -31,7 +31,7 @@
 - Produces: `RfmAnalyticsService::scoreMonetary(float $amount): int`
 - Produces: `RfmAnalyticsService::classifySegment(int $r, int $f, int $m): string`
 
-- [ ] **Step 1: Write Unit tests for RFM scoring functions and segment classifications**
+- [x] **Step 1: Write Unit tests for RFM scoring functions and segment classifications**
 
 Create `tests/Unit/Services/RfmAnalyticsServiceTest.php`:
 ```php
@@ -92,12 +92,12 @@ class RfmAnalyticsServiceTest extends TestCase
 }
 ```
 
-- [ ] **Step 2: Run unit test to verify it fails**
+- [x] **Step 2: Run unit test to verify it fails**
 
 Run: `php artisan test tests/Unit/Services/RfmAnalyticsServiceTest.php`  
 Expected: FAIL (`Class "App\Services\RfmAnalyticsService" not found`).
 
-- [ ] **Step 3: Implement RFM scoring and classification in RfmAnalyticsService**
+- [x] **Step 3: Implement RFM scoring and classification in RfmAnalyticsService**
 
 Create `app/Services/RfmAnalyticsService.php`:
 ```php
@@ -240,12 +240,12 @@ class RfmAnalyticsService
 }
 ```
 
-- [ ] **Step 4: Run unit test to verify it passes**
+- [x] **Step 4: Run unit test to verify it passes**
 
 Run: `php artisan test tests/Unit/Services/RfmAnalyticsServiceTest.php`  
 Expected: PASS.
 
-- [ ] **Step 5: Commit Task 1**
+- [x] **Step 5: Commit Task 1**
 
 ```bash
 git add app/Services/RfmAnalyticsService.php tests/Unit/Services/RfmAnalyticsServiceTest.php
@@ -264,7 +264,7 @@ git commit -m "feat(analytics): implement RFM scoring rules and customer classif
 - Produces: `RfmAnalyticsService::getSegmentCategoryAffinities(array $customerRecords): array`
 - Produces: `RfmAnalyticsService::getRfmDashboardData(): array` returning summary cards, chart series, segment category table, and customer drill-down collection.
 
-- [ ] **Step 1: Write Unit test asserting RFM summary and category affinity**
+- [x] **Step 1: Write Unit test asserting RFM summary and category affinity**
 
 Add to `tests/Unit/Services/RfmAnalyticsServiceTest.php`:
 ```php
@@ -293,7 +293,7 @@ Add to `tests/Unit/Services/RfmAnalyticsServiceTest.php`:
     }
 ```
 
-- [ ] **Step 2: Implement category affinity aggregation and summary dashboard data**
+- [x] **Step 2: Implement category affinity aggregation and summary dashboard data**
 
 In `app/Services/RfmAnalyticsService.php`, add:
 ```php
@@ -423,12 +423,12 @@ In `app/Services/RfmAnalyticsService.php`, add:
     }
 ```
 
-- [ ] **Step 3: Run unit test to verify it passes**
+- [x] **Step 3: Run unit test to verify it passes**
 
 Run: `php artisan test tests/Unit/Services/RfmAnalyticsServiceTest.php`  
 Expected: PASS.
 
-- [ ] **Step 4: Commit Task 2**
+- [x] **Step 4: Commit Task 2**
 
 ```bash
 git add app/Services/RfmAnalyticsService.php tests/Unit/Services/RfmAnalyticsServiceTest.php
@@ -449,7 +449,7 @@ git commit -m "feat(analytics): implement category affinity and RFM summary aggr
   - `rules`: array of discovered association pairs $\{A\} \Rightarrow \{B\}$ with `support`, `confidence`, `lift`, and formatted image assets.
   - `top_rules`: top 3 rules with the highest Lift.
 
-- [ ] **Step 1: Write Unit tests for Support, Confidence, and Lift calculations**
+- [x] **Step 1: Write Unit tests for Support, Confidence, and Lift calculations**
 
 Create `tests/Unit/Services/MarketBasketMiningServiceTest.php`:
 ```php
@@ -500,7 +500,7 @@ class MarketBasketMiningServiceTest extends TestCase
 }
 ```
 
-- [ ] **Step 2: Implement MarketBasketMiningService**
+- [x] **Step 2: Implement MarketBasketMiningService**
 
 Create `app/Services/MarketBasketMiningService.php`:
 ```php
@@ -660,12 +660,12 @@ class MarketBasketMiningService
 }
 ```
 
-- [ ] **Step 3: Run unit test to verify it passes**
+- [x] **Step 3: Run unit test to verify it passes**
 
 Run: `php artisan test tests/Unit/Services/MarketBasketMiningServiceTest.php`  
 Expected: PASS.
 
-- [ ] **Step 4: Commit Task 3**
+- [x] **Step 4: Commit Task 3**
 
 ```bash
 git add app/Services/MarketBasketMiningService.php tests/Unit/Services/MarketBasketMiningServiceTest.php
@@ -683,7 +683,7 @@ git commit -m "feat(analytics): implement Apriori market basket mining and assoc
 **Interfaces:**
 - Produces: `AnalyticsController@index` accepting `?tab=sales|rfm|basket` and supplying `$tabData` for active sub-tab.
 
-- [ ] **Step 1: Write Feature test asserting all 3 sub-tabs render with 200 OK**
+- [x] **Step 1: Write Feature test asserting all 3 sub-tabs render with 200 OK**
 
 Create `tests/Feature/Admin/AnalyticsAdvancedTest.php`:
 ```php
@@ -721,7 +721,7 @@ class AnalyticsAdvancedTest extends TestCase
 }
 ```
 
-- [ ] **Step 2: Update AnalyticsController to inject and coordinate services**
+- [x] **Step 2: Update AnalyticsController to inject and coordinate services**
 
 In `app/Http/Controllers/Admin/AnalyticsController.php`:
 ```php
@@ -783,12 +783,12 @@ class AnalyticsController extends Controller
 }
 ```
 
-- [ ] **Step 3: Run feature tests to verify they pass**
+- [x] **Step 3: Run feature tests to verify they pass**
 
 Run: `php artisan test tests/Feature/Admin/AnalyticsAdvancedTest.php`  
 Expected: PASS.
 
-- [ ] **Step 4: Commit Task 4**
+- [x] **Step 4: Commit Task 4**
 
 ```bash
 git add app/Http/Controllers/Admin/AnalyticsController.php tests/Feature/Admin/AnalyticsAdvancedTest.php
@@ -807,7 +807,7 @@ git commit -m "feat(analytics): connect RFM and Market Basket services to Analyt
 - Produces: Tab 2 UI (6 Cohort Cards, Segment Donut Chart, Segment Category Affinity Matrix, Customer Drilldown Table).
 - Produces: Tab 3 UI (Basket overview, Top 3 Cross-sell cards, Association Rules Table with Support/Confidence/Lift and "Tạo Combo" CTA).
 
-- [ ] **Step 1: Construct the full 3-tab layout in `resources/views/admin/analytics/index.blade.php`**
+- [x] **Step 1: Construct the full 3-tab layout in `resources/views/admin/analytics/index.blade.php`**
 
 Implement:
 1. Top sub-tab navigation bar with tab switching.
@@ -815,12 +815,12 @@ Implement:
 3. Tab 2: RFM Cohort cards, Segment ↔ Category table, customer table.
 4. Tab 3: Apriori Cross-sell discovery cards, Support/Confidence/Lift table with combo CTA button.
 
-- [ ] **Step 2: Run all analytics tests to verify view rendering**
+- [x] **Step 2: Run all analytics tests to verify view rendering**
 
 Run: `php artisan test tests/Feature/Admin/AnalyticsTest.php tests/Feature/Admin/AnalyticsAdvancedTest.php`  
 Expected: PASS.
 
-- [ ] **Step 3: Commit Task 5**
+- [x] **Step 3: Commit Task 5**
 
 ```bash
 git add resources/views/admin/analytics/index.blade.php
@@ -835,7 +835,7 @@ git commit -m "feat(analytics): render 3-tab UI for RFM customer segmentation an
 - Verification: Run complete test suite (`php artisan test`)
 - Git: Push to `origin main`
 
-- [ ] **Step 1: Run complete test suite**
+- [x] **Step 1: Run complete test suite**
 
 Run: `php artisan test`  
 Expected: PASS (All tests pass without regression).
