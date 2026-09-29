@@ -2,8 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\Category;
 use App\Models\Order;
+use App\Models\OrderItem;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class RfmAnalyticsService
 {
@@ -146,5 +149,135 @@ class RfmAnalyticsService
         }
 
         return $results;
+    }
+
+    /**
+     * Computes the favorite product category and top-selling product for each RFM segment.
+     */
+    public function getSegmentCategoryAffinities(array $customerRecords): array
+    {
+        $segmentOrderMap = [];
+        $segmentMeta = [
+            'Champions' => ['color' => '#6366f1', 'badge' => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300', 'action' => 'Chăm sóc VIP & Quà tri ân sinh nhật'],
+            'Loyal Customers' => ['color' => '#10b981', 'badge' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300', 'action' => 'Tích điểm thành viên & Voucher giới hạn'],
+            'Potential Loyalists' => ['color' => '#3b82f6', 'badge' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300', 'action' => 'Gợi ý sản phẩm phối kèm & Giảm giá đơn thứ 2'],
+            'New Customers' => ['color' => '#f59e0b', 'badge' => 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300', 'action' => 'Khảo sát sau mua & Hướng dẫn bảo quản đồ'],
+            'At Risk' => ['color' => '#f43f5e', 'badge' => 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300', 'action' => 'Chiến dịch email/SMS nhớ bạn & Voucher sâu'],
+            'Lost Customers' => ['color' => '#64748b', 'badge' => 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300', 'action' => 'Remarketing sản phẩm xả kho giá sốc'],
+        ];
+
+        foreach ($customerRecords as $c) {
+            $seg = $c['segment'];
+            if (!isset($segmentOrderMap[$seg])) {
+                $segmentOrderMap[$seg] = [];
+            }
+            $segmentOrderMap[$seg] = array_merge($segmentOrderMap[$seg], $c['order_ids']);
+        }
+
+        $segmentStats = [];
+
+        foreach ($segmentMeta as $segmentName => $meta) {
+            $orderIds = array_unique($segmentOrderMap[$segmentName] ?? []);
+            
+            $favCategory = 'Chưa có dữ liệu';
+            $topProduct = 'Chưa có dữ liệu';
+            $catRevenue = 0.0;
+
+            if (!empty($orderIds)) {
+                $items = OrderItem::join('product_variants', 'order_items.product_variant_id', '=', 'product_variants.id')
+                    ->join('products', 'product_variants.product_id', '=', 'products.id')
+                    ->leftJoin('category_product', 'products.id', '=', 'category_product.product_id')
+                    ->leftJoin('categories', 'category_product.category_id', '=', 'categories.id')
+                    ->whereIn('order_items.order_id', $orderIds)
+                    ->select(
+                        'categories.id as category_id',
+                        'categories.name as category_name',
+                        'products.name as product_name',
+                        DB::raw('SUM(order_items.total) as total_rev')
+                    )
+                    ->groupBy('categories.id', 'categories.name', 'products.name')
+                    ->orderBy('total_rev', 'desc')
+                    ->get();
+
+                if ($items->isNotEmpty()) {
+                    $favCategory = $items->first()->category_name ?: 'Chưa phân loại';
+                    $topProduct = $items->first()->product_name;
+                    $catRevenue = (float) $items->first()->total_rev;
+                }
+            }
+
+            $segmentStats[$segmentName] = [
+                'name' => $segmentName,
+                'color' => $meta['color'],
+                'badge' => $meta['badge'],
+                'action' => $meta['action'],
+                'favorite_category' => $favCategory,
+                'top_product' => $topProduct,
+                'category_revenue' => $catRevenue,
+            ];
+        }
+
+        return $segmentStats;
+    }
+
+    /**
+     * Aggregates RFM scores, cards, segment share chart and customers for the admin dashboard.
+     */
+    public function getRfmDashboardData(): array
+    {
+        $customers = $this->calculateCustomerRfmScores();
+        $affinities = $this->getSegmentCategoryAffinities($customers);
+
+        $totalCustomers = count($customers);
+        $totalRevenue = array_sum(array_column($customers, 'monetary'));
+
+        $cohortCounts = [
+            'Champions' => 0,
+            'Loyal Customers' => 0,
+            'Potential Loyalists' => 0,
+            'New Customers' => 0,
+            'At Risk' => 0,
+            'Lost Customers' => 0,
+        ];
+
+        $cohortRevenue = [
+            'Champions' => 0.0,
+            'Loyal Customers' => 0.0,
+            'Potential Loyalists' => 0.0,
+            'New Customers' => 0.0,
+            'At Risk' => 0.0,
+            'Lost Customers' => 0.0,
+        ];
+
+        foreach ($customers as $c) {
+            $cohortCounts[$c['segment']]++;
+            $cohortRevenue[$c['segment']] += (float) $c['monetary'];
+        }
+
+        $cards = [];
+        foreach ($cohortCounts as $seg => $cnt) {
+            $share = $totalCustomers > 0 ? round(($cnt / $totalCustomers) * 100, 1) : 0.0;
+            $rev = $cohortRevenue[$seg];
+            $cards[$seg] = [
+                'name' => $seg,
+                'count' => $cnt,
+                'share' => $share,
+                'revenue' => $rev,
+                'affinity' => $affinities[$seg] ?? null,
+            ];
+        }
+
+        return [
+            'total_customers' => $totalCustomers,
+            'total_revenue' => $totalRevenue,
+            'cards' => $cards,
+            'chart' => [
+                'labels' => array_keys($cohortCounts),
+                'values' => array_values($cohortCounts),
+                'colors' => ['#6366f1', '#10b981', '#3b82f6', '#f59e0b', '#f43f5e', '#64748b'],
+            ],
+            'affinities' => $affinities,
+            'customers' => $customers,
+        ];
     }
 }

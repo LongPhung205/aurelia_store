@@ -3,10 +3,13 @@
 namespace Tests\Unit\Services;
 
 use App\Services\RfmAnalyticsService;
-use PHPUnit\Framework\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class RfmAnalyticsServiceTest extends TestCase
 {
+    use RefreshDatabase;
+
     private RfmAnalyticsService $service;
 
     protected function setUp(): void
@@ -51,5 +54,30 @@ class RfmAnalyticsServiceTest extends TestCase
         $this->assertEquals('New Customers', $this->service->classifySegment(4, 1, 1));
         $this->assertEquals('At Risk', $this->service->classifySegment(2, 4, 4));
         $this->assertEquals('Lost Customers', $this->service->classifySegment(1, 1, 1));
+    }
+
+    public function test_get_segment_category_affinities_structure()
+    {
+        $mockCustomers = [
+            [
+                'key' => 'user_1',
+                'user_id' => 1,
+                'name' => 'VIP Long',
+                'phone' => '0987654321',
+                'order_ids' => [101, 102],
+                'recency_days' => 5,
+                'last_order_date' => '25/09/2026',
+                'frequency' => 5,
+                'monetary' => 6000000,
+                'r_score' => 5,
+                'f_score' => 4,
+                'm_score' => 5,
+                'segment' => 'Champions',
+            ]
+        ];
+
+        $affinities = $this->service->getSegmentCategoryAffinities($mockCustomers);
+        $this->assertArrayHasKey('Champions', $affinities);
+        $this->assertEquals('Champions', $affinities['Champions']['name']);
     }
 }
