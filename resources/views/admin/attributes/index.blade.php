@@ -66,10 +66,12 @@
                                                 @endif
                                             </td>
                                             <td class="px-6 py-4 text-right">
-                                                <form action="{{ route('admin.colors.destroy', $color->id) }}" method="POST" class="inline-block">
+                                                <form action="{{ route('admin.colors.destroy', $color->id) }}" method="POST" class="inline-block form-delete"
+                                                      data-confirm-title="Xóa màu sắc?"
+                                                      data-confirm-text="Bạn có chắc chắn muốn xóa màu &quot;{{ $color->name }}&quot; không?">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="text-red-600 bg-white border border-gray-300 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-3 py-1.5 hover:bg-gray-100 dark:bg-gray-800 dark:text-red-500 dark:border-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-700" onclick="return confirm('Xóa màu này?')">
+                                                    <button type="submit" class="text-red-600 bg-white border border-gray-300 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-3 py-1.5 hover:bg-gray-100 dark:bg-gray-800 dark:text-red-500 dark:border-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-700 cursor-pointer" title="Xóa màu">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
                                                 </form>
@@ -122,10 +124,12 @@
                                             </td>
 
                                             <td class="px-6 py-4 text-right">
-                                                <form action="{{ route('admin.sizes.destroy', $size->id) }}" method="POST" class="inline-block">
+                                                <form action="{{ route('admin.sizes.destroy', $size->id) }}" method="POST" class="inline-block form-delete"
+                                                      data-confirm-title="Xóa kích cỡ?"
+                                                      data-confirm-text="Bạn có chắc chắn muốn xóa kích cỡ &quot;{{ $size->name }}&quot; không?">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="text-red-600 bg-white border border-gray-300 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-3 py-1.5 hover:bg-gray-100 dark:bg-gray-800 dark:text-red-500 dark:border-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-700" onclick="return confirm('Xóa kích cỡ này?')">
+                                                    <button type="submit" class="text-red-600 bg-white border border-gray-300 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-3 py-1.5 hover:bg-gray-100 dark:bg-gray-800 dark:text-red-500 dark:border-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-700 cursor-pointer" title="Xóa kích cỡ">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
                                                 </form>
@@ -176,10 +180,12 @@
                                             <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">{{ $material->name }}</td>
 
                                             <td class="px-6 py-4 text-right">
-                                                <form action="{{ route('admin.materials.destroy', $material->id) }}" method="POST" class="inline-block">
+                                                <form action="{{ route('admin.materials.destroy', $material->id) }}" method="POST" class="inline-block form-delete"
+                                                      data-confirm-title="Xóa chất liệu?"
+                                                      data-confirm-text="Bạn có chắc chắn muốn xóa chất liệu &quot;{{ $material->name }}&quot; không?">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="text-red-600 bg-white border border-gray-300 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-3 py-1.5 hover:bg-gray-100 dark:bg-gray-800 dark:text-red-500 dark:border-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-700" onclick="return confirm('Xóa chất liệu này?')">
+                                                    <button type="submit" class="text-red-600 bg-white border border-gray-300 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-3 py-1.5 hover:bg-gray-100 dark:bg-gray-800 dark:text-red-500 dark:border-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-700 cursor-pointer" title="Xóa chất liệu">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
                                                 </form>

@@ -43,6 +43,12 @@
 
                 <!-- Navigation -->
                 <nav class="flex flex-col py-2">
+                    @if(auth()->user()->role === 'admin')
+                        <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-6 py-3 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 transition-colors border-l-2 border-primary-500 mb-1">
+                            <i class="bi bi-speedometer2 text-lg w-5 text-primary-400"></i>
+                            Trang Quản Trị Admin
+                        </a>
+                    @endif
                     <a href="{{ route('profile.index') }}" class="flex items-center gap-3 px-6 py-3 text-sm font-medium transition-colors {{ request()->routeIs('profile.index') ? 'text-brand bg-brand/5 border-l-2 border-brand' : 'text-gray-600 hover:bg-gray-50 hover:text-brand border-l-2 border-transparent' }}">
                         <i class="bi bi-person text-lg w-5"></i>
                         Thông tin tài khoản

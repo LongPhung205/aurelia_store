@@ -73,19 +73,15 @@ class AdminChatController extends Controller
     /**
      * Admin gửi tin nhắn phản hồi khách hàng.
      */
-    public function sendMessage(Request $request)
+    public function sendMessage(\App\Http\Requests\Client\SendChatMessageRequest $request)
     {
-        $request->validate([
-            'conversation_id' => 'required|exists:conversations,id',
-            'content'         => 'required|string|max:2000',
-        ]);
-
-        $conversation = Conversation::findOrFail($request->conversation_id);
+        $validated = $request->validated();
+        $conversation = Conversation::findOrFail($validated['conversation_id']);
 
         $message = Message::create([
             'conversation_id' => $conversation->id,
             'user_id'         => Auth::id(),
-            'content'         => $request->content,
+            'content'         => $validated['content'],
         ]);
 
         // Cập nhật thời gian conversation để sort lên đầu

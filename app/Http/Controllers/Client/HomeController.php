@@ -21,6 +21,7 @@ class HomeController extends Controller
 
         // 2. Lấy Banners (active, sort by position)
         $banners = \App\Models\Banner::where('is_active', true)
+            ->home()
             ->orderBy('position')
             ->get();
 

@@ -3,8 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Product;
+use App\Http\Requests\Client\ToggleWishlistRequest;
 use Illuminate\Support\Facades\Auth;
 
 class WishlistController extends Controller
@@ -23,14 +22,10 @@ class WishlistController extends Controller
         return view('client.wishlist.index', compact('wishlists'));
     }
 
-    public function toggle(Request $request)
+    public function toggle(ToggleWishlistRequest $request)
     {
-        $request->validate([
-            'product_id' => 'required|exists:products,id'
-        ]);
-
         $user = Auth::user();
-        $productId = $request->product_id;
+        $productId = $request->validated()['product_id'];
 
         $wishlist = $user->wishlists()->where('product_id', $productId)->first();
 

@@ -79,7 +79,14 @@
                 chatBox.scrollTop = chatBox.scrollHeight;
             }).catch(error => {
                 console.error("Error sending message", error);
-                alert("Failed to send message!");
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Lỗi gửi tin nhắn',
+                        text: 'Không thể gửi tin nhắn. Vui lòng thử lại!',
+                        confirmButtonColor: '#2563eb'
+                    });
+                }
             });
         };
 

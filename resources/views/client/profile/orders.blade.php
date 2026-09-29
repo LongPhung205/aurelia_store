@@ -108,12 +108,20 @@
                     <div class="text-gray-600 text-sm">
                         Tổng tiền: <span class="text-xl font-bold text-brand ml-1">{{ number_format($order->total_amount, 0, ',', '.') }}đ</span>
                     </div>
-                    <div class="flex gap-3 w-full sm:w-auto">
-                        <a href="{{ route('profile.orders.show', $order->id) }}" class="flex-1 sm:flex-none text-center bg-white border border-gray-300 text-gray-700 px-6 py-2 rounded-lg font-medium hover:bg-gray-50 hover:text-brand hover:border-brand transition-colors">
+                    <div class="flex gap-3 w-full sm:w-auto items-center">
+                        <a href="{{ route('profile.orders.show', $order->id) }}" class="flex-1 sm:flex-none text-center bg-white border border-gray-300 text-gray-700 px-5 py-2 rounded-lg font-medium hover:bg-gray-50 hover:text-brand hover:border-brand transition-colors text-sm">
                             Xem chi tiết
                         </a>
+                        @if($order->status === 'pending')
+                            <form action="{{ route('orders.cancel', $order->id) }}" method="POST" class="form-cancel-order inline-block flex-1 sm:flex-none" data-order-id="{{ $order->id }}">
+                                @csrf
+                                <button type="button" class="btn-trigger-cancel w-full text-center bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 hover:text-red-700 px-5 py-2 rounded-lg font-medium transition-colors text-sm">
+                                    <i class="bi bi-x-circle mr-1"></i> Hủy đơn
+                                </button>
+                            </form>
+                        @endif
                         @if($order->status === 'completed')
-                            <a href="#" class="flex-1 sm:flex-none text-center bg-brand text-white px-6 py-2 rounded-lg font-medium hover:bg-[#C2185B] transition-colors">
+                            <a href="#" class="flex-1 sm:flex-none text-center bg-brand text-white px-5 py-2 rounded-lg font-medium hover:bg-[#C2185B] transition-colors text-sm">
                                 Mua lại
                             </a>
                         @endif

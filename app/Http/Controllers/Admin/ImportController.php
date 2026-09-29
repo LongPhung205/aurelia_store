@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreImportRequest;
+use App\Http\Requests\Admin\UpdateImportRequest;
 use App\Models\Import;
 use App\Models\ImportDetail;
 use App\Models\ProductVariant;
@@ -77,69 +79,62 @@ class ImportController extends Controller
         return view('admin.imports.create', compact('suppliers', 'products'));
     }
 
-    public function store(Request $request)
+    public function store(StoreImportRequest $request)
     {
-        $request->validate([
-            'supplier_id' => 'required|string', // Accept string to allow creating new supplier
-            'note' => 'nullable|string',
-            'variants' => 'required|array|min:1',
-            'variants.*' => 'exists:product_variants,id',
-            'quantities' => 'required|array',
-            'quantities.*' => 'required|integer|min:1',
-            'prices' => 'required|array',
-            'prices.*' => 'required|numeric|min:0',
-        ]);
-
-        DB::transaction(function () use ($request) {
-            $supplierId = $request->supplier_id;
-            
-            // Nếu supplier_id không phải là số (tức là tên nhà cung cấp mới được gõ vào)
-            if (!is_numeric($supplierId)) {
-                $newSupplier = Supplier::create([
-                    'name' => $supplierId,
-                    'status' => true
-                ]);
-                $supplierId = $newSupplier->id;
-            } else {
-                // Đảm bảo supplier id tồn tại
-                $exists = Supplier::where('id', $supplierId)->exists();
-                if (!$exists) {
-                    throw \Illuminate\Validation\ValidationException::withMessages([
-                        'supplier_id' => 'Nhà cung cấp không hợp lệ.'
+        try {
+            DB::transaction(function () use ($request) {
+                $supplierId = $request->supplier_id;
+                
+                // Nếu supplier_id không phải là số (tức là tên nhà cung cấp mới được gõ vào)
+                if (!is_numeric($supplierId)) {
+                    $newSupplier = Supplier::create([
+                        'name' => $supplierId,
+                        'status' => true
                     ]);
+                    $supplierId = $newSupplier->id;
+                } else {
+                    // Đảm bảo supplier id tồn tại
+                    $exists = Supplier::where('id', $supplierId)->exists();
+                    if (!$exists) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'supplier_id' => 'Nhà cung cấp không hợp lệ.'
+                        ]);
+                    }
                 }
-            }
 
-            $import = Import::create([
-                'code' => 'IMP-' . date('Ymd') . '-' . strtoupper(uniqid()),
-                'supplier_id' => $supplierId,
-                'user_id' => Auth::id(),
-                'note' => $request->note,
-                'status' => 'pending',
-                'total_amount' => 0,
-            ]);
-
-            $totalAmount = 0;
-            foreach ($request->variants as $index => $variantId) {
-                $qty = $request->quantities[$index];
-                $price = $request->prices[$index];
-                $subtotal = $qty * $price;
-
-                ImportDetail::create([
-                    'import_id' => $import->id,
-                    'product_variant_id' => $variantId,
-                    'quantity' => $qty,
-                    'unit_price' => $price,
-                    'subtotal' => $subtotal,
+                $import = Import::create([
+                    'code' => 'IMP-' . date('Ymd') . '-' . strtoupper(uniqid()),
+                    'supplier_id' => $supplierId,
+                    'user_id' => Auth::id(),
+                    'note' => $request->note,
+                    'status' => 'pending',
+                    'total_amount' => 0,
                 ]);
 
-                $totalAmount += $subtotal;
-            }
+                $totalAmount = 0;
+                foreach ($request->variants as $index => $variantId) {
+                    $qty = $request->quantities[$index];
+                    $price = $request->prices[$index];
+                    $subtotal = $qty * $price;
 
-            $import->update(['total_amount' => $totalAmount]);
-        });
+                    ImportDetail::create([
+                        'import_id' => $import->id,
+                        'product_variant_id' => $variantId,
+                        'quantity' => $qty,
+                        'unit_price' => $price,
+                        'subtotal' => $subtotal,
+                    ]);
 
-        return redirect()->route('admin.imports.index')->with('success', 'Đã lưu phiếu nhập kho (bản nháp).');
+                    $totalAmount += $subtotal;
+                }
+
+                $import->update(['total_amount' => $totalAmount]);
+            });
+
+            return redirect()->route('admin.imports.index')->with('success', 'Đã lưu phiếu nhập kho (bản nháp).');
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('error', 'Lỗi lưu phiếu nhập: ' . $e->getMessage());
+        }
     }
 
     public function show(Import $import)
@@ -153,54 +148,60 @@ class ImportController extends Controller
         return view('admin.imports.show', compact('import', 'groupedDetails'));
     }
 
-    public function update(Request $request, Import $import)
+    public function update(UpdateImportRequest $request, Import $import)
     {
+        $action = $request->validated()['action'];
+
         // Chốt phiếu nhập (Complete)
-        if ($request->action === 'complete' && $import->status === 'pending') {
-            DB::transaction(function () use ($import) {
-                $import->update([
-                    'status' => 'completed',
-                    'completed_at' => now(),
-                ]);
-
-                foreach ($import->details as $detail) {
-                    $variant = $detail->variant;
-                    $oldStock = $variant->stock_quantity;
-                    $oldCost = $variant->cost_price;
-                    
-                    // Tính giá vốn bình quân gia quyền (Weighted Average Cost)
-                    $totalOldValue = $oldStock * $oldCost;
-                    $totalImportValue = $detail->quantity * $detail->unit_price;
-                    $newStock = $oldStock + $detail->quantity;
-                    
-                    $newCostPrice = $newStock > 0 ? ($totalOldValue + $totalImportValue) / $newStock : $detail->unit_price;
-
-                    // Cập nhật tồn kho và giá vốn
-                    $variant->update([
-                        'stock_quantity' => $newStock,
-                        'cost_price' => $newCostPrice,
+        if ($action === 'complete' && $import->status === 'pending') {
+            try {
+                DB::transaction(function () use ($import) {
+                    $import->update([
+                        'status' => 'completed',
+                        'completed_at' => now(),
                     ]);
 
-                    // Ghi thẻ kho (Inventory History)
-                    InventoryHistory::create([
-                        'product_variant_id' => $variant->id,
-                        'reference_type' => get_class($import),
-                        'reference_id' => $import->id,
-                        'type' => 'import',
-                        'quantity_changed' => $detail->quantity,
-                        'stock_before' => $oldStock,
-                        'stock_after' => $newStock,
-                        'user_id' => Auth::id(),
-                        'note' => 'Nhập kho từ phiếu ' . $import->code,
-                    ]);
-                }
-            });
+                    foreach ($import->details as $detail) {
+                        $variant = $detail->variant;
+                        $oldStock = $variant->stock_quantity;
+                        $oldCost = $variant->cost_price;
+                        
+                        // Tính giá vốn bình quân gia quyền (Weighted Average Cost)
+                        $totalOldValue = $oldStock * $oldCost;
+                        $totalImportValue = $detail->quantity * $detail->unit_price;
+                        $newStock = $oldStock + $detail->quantity;
+                        
+                        $newCostPrice = $newStock > 0 ? ($totalOldValue + $totalImportValue) / $newStock : $detail->unit_price;
 
-            return redirect()->route('admin.imports.index')->with('success', 'Đã chốt phiếu nhập, cập nhật tồn kho và giá vốn thành công.');
+                        // Cập nhật tồn kho và giá vốn
+                        $variant->update([
+                            'stock_quantity' => $newStock,
+                            'cost_price' => $newCostPrice,
+                        ]);
+
+                        // Ghi thẻ kho (Inventory History)
+                        InventoryHistory::create([
+                            'product_variant_id' => $variant->id,
+                            'reference_type' => get_class($import),
+                            'reference_id' => $import->id,
+                            'type' => 'import',
+                            'quantity_changed' => $detail->quantity,
+                            'stock_before' => $oldStock,
+                            'stock_after' => $newStock,
+                            'user_id' => Auth::id(),
+                            'note' => 'Nhập kho từ phiếu ' . $import->code,
+                        ]);
+                    }
+                });
+
+                return redirect()->route('admin.imports.index')->with('success', 'Đã chốt phiếu nhập, cập nhật tồn kho và giá vốn thành công.');
+            } catch (\Exception $e) {
+                return redirect()->back()->with('error', 'Lỗi khi chốt phiếu nhập: ' . $e->getMessage());
+            }
         }
 
         // Hủy phiếu nhập
-        if ($request->action === 'cancel' && $import->status === 'pending') {
+        if ($action === 'cancel' && $import->status === 'pending') {
             $import->update(['status' => 'cancelled']);
             return redirect()->route('admin.imports.index')->with('success', 'Đã hủy phiếu nhập.');
         }

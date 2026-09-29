@@ -15,12 +15,11 @@ class GhnService
 
     public function __construct()
     {
-        // Sử dụng cấu hình từ .env
-        $this->apiUrl = env('GHN_API_URL', 'https://dev-online-gateway.ghn.vn/shiip/public-api');
-        $this->token = env('GHN_TOKEN');
-        $this->shopId = env('GHN_SHOP_ID');
-        $this->fromDistrictId = env('GHN_FROM_DISTRICT_ID');
-        $this->fromWardCode = env('GHN_FROM_WARD_CODE');
+        $this->apiUrl = config('services.ghn.api_url', 'https://dev-online-gateway.ghn.vn/shiip/public-api');
+        $this->token = config('services.ghn.token');
+        $this->shopId = config('services.ghn.shop_id');
+        $this->fromDistrictId = config('services.ghn.from_district_id');
+        $this->fromWardCode = config('services.ghn.from_ward_code');
     }
 
     /**

@@ -180,10 +180,15 @@
                                             @foreach($statusLabels as $sKey => $sLabel)
                                                 @if($sKey != $order->status)
                                                 <li>
-                                                    <form action="{{ route('admin.orders.update_status', $order) }}" method="POST" class="m-0" onsubmit="return confirm('Xác nhận đổi trạng thái đơn hàng sang: {{ $sLabel }}?');">
+                                                    <form action="{{ route('admin.orders.update_status', $order) }}" method="POST" class="m-0 form-confirm"
+                                                          data-confirm-title="Đổi trạng thái đơn hàng?"
+                                                          data-confirm-text="Xác nhận chuyển trạng thái đơn hàng #ORD-{{ $order->id }} sang &quot;{{ $sLabel }}&quot;?"
+                                                          data-confirm-icon="question"
+                                                          data-confirm-btn="<i class='bi bi-arrow-repeat mr-1'></i> Đồng ý đổi"
+                                                          data-confirm-color="#2563eb">
                                                         @csrf
                                                         <input type="hidden" name="status" value="{{ $sKey }}">
-                                                        <button type="submit" class="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                                        <button type="submit" class="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white cursor-pointer">
                                                             {{ $sLabel }}
                                                         </button>
                                                     </form>

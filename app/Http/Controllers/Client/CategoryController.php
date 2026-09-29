@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Color;
+use App\Models\Product;
 use App\Models\Size;
 use Illuminate\Http\Request;
 
@@ -15,8 +16,18 @@ class CategoryController extends Controller
         $category = Category::where('slug', $slug)
             ->firstOrFail();
 
-        // Base query: products in this category
-        $query = $category->products()
+        // Lấy toàn bộ ID danh mục (bao gồm chính nó và tất cả danh mục con cháu)
+        $categoryIds = collect([$category->id]);
+        $fetchChildIds = function ($cat) use (&$fetchChildIds, &$categoryIds) {
+            foreach ($cat->children as $child) {
+                $categoryIds->push($child->id);
+                $fetchChildIds($child);
+            }
+        };
+        $fetchChildIds($category);
+
+        // Base query: products in this category or any descendant categories
+        $query = Product::whereHas('categories', fn($q) => $q->whereIn('categories.id', $categoryIds->unique()))
             ->where('status', 'active')
             ->with(['variants.color', 'variants.size', 'primaryImage']);
 
@@ -64,7 +75,9 @@ class CategoryController extends Controller
         $products = $query->paginate(12)->withQueryString();
 
         // --- Filter data for sidebar ---
-        $categoryProductIds = $category->products()->where('status', 'active')->pluck('products.id');
+        $categoryProductIds = Product::whereHas('categories', fn($q) => $q->whereIn('categories.id', $categoryIds->unique()))
+            ->where('status', 'active')
+            ->pluck('id');
 
         $allColors = Color::whereHas('variants', fn($q) =>
             $q->whereIn('product_id', $categoryProductIds)

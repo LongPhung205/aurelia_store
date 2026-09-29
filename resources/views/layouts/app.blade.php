@@ -33,5 +33,23 @@
                 {{ $slot }}
             </main>
         </div>
+
+        <!-- SweetAlert2 -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            window.alert = function(message) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Thông báo',
+                        text: String(message),
+                        icon: 'info',
+                        confirmButtonColor: '#4f46e5',
+                        confirmButtonText: 'Đóng'
+                    });
+                } else {
+                    console.log('Alert:', message);
+                }
+            };
+        </script>
     </body>
 </html>

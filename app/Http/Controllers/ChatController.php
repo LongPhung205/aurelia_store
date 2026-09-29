@@ -2,30 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
-use App\Models\Message;
-use App\Models\Conversation;
 use App\Events\MessageSent;
+use App\Http\Requests\Client\SendChatMessageRequest;
+use App\Models\Conversation;
+use App\Models\Message;
 use Illuminate\Support\Facades\Auth;
 
 class ChatController extends Controller
 {
-    public function sendMessage(Request $request)
+    public function sendMessage(SendChatMessageRequest $request)
     {
-        $request->validate([
-            'conversation_id' => 'required|exists:conversations,id',
-            'content' => 'required|string|max:1000',
-        ]);
+        $validated = $request->validated();
+        $conversation = Conversation::findOrFail($validated['conversation_id']);
 
-        $conversation = Conversation::findOrFail($request->conversation_id);
+        // Security check: only allow sender if they are the owner of the conversation or an admin
+        if ($conversation->user_id !== Auth::id() && Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized access to this conversation.');
+        }
 
-        // Security check: only allow sender if they are part of the conversation or admin
-        // Simplified for now: assuming logged in user
         $message = Message::create([
             'conversation_id' => $conversation->id,
             'user_id' => Auth::id(),
-            'content' => $request->content,
+            'content' => $validated['content'],
         ]);
 
         broadcast(new MessageSent($message))->toOthers();

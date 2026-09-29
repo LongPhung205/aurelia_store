@@ -3,10 +3,16 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Client\StoreAddressRequest;
+use App\Http\Requests\Client\UpdateAddressRequest;
+use App\Http\Requests\Client\UpdatePasswordRequest;
+use App\Http\Requests\Client\UpdateProfileRequest;
+use App\Models\Order;
+use App\Models\UserAddress;
+use App\Services\GhnService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
 {
@@ -22,16 +28,10 @@ class ProfileController extends Controller
     /**
      * Cập nhật thông tin cá nhân
      */
-    public function update(Request $request)
+    public function update(UpdateProfileRequest $request)
     {
         $user = auth()->user();
-
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:20'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
-        ]);
+        $validated = $request->validated();
 
         // Xử lý upload avatar
         if ($request->hasFile('avatar')) {
@@ -59,12 +59,9 @@ class ProfileController extends Controller
     /**
      * Cập nhật mật khẩu
      */
-    public function updatePassword(Request $request)
+    public function updatePassword(UpdatePasswordRequest $request)
     {
-        $validated = $request->validate([
-            'current_password' => ['required', 'current_password'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-        ]);
+        $validated = $request->validated();
 
         $request->user()->update([
             'password' => Hash::make($validated['password']),
@@ -76,25 +73,16 @@ class ProfileController extends Controller
     /**
      * Quản lý Sổ địa chỉ
      */
-    public function addresses(\App\Services\GhnService $ghnService)
+    public function addresses(GhnService $ghnService)
     {
         $addresses = auth()->user()->addresses()->orderByDesc('is_default')->get();
         $provinces = $ghnService->getProvinces();
         return view('client.profile.addresses', compact('addresses', 'provinces'));
     }
 
-    public function storeAddress(Request $request)
+    public function storeAddress(StoreAddressRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
-            'province_id' => 'required|string',
-            'district_id' => 'required|string',
-            'ward_code' => 'required|string',
-            'address' => 'required|string|max:255',
-            'is_default' => 'nullable|boolean',
-        ]);
-
+        $validated = $request->validated();
         $user = auth()->user();
 
         // Nếu là địa chỉ đầu tiên hoặc được đánh dấu là mặc định
@@ -108,32 +96,23 @@ class ProfileController extends Controller
         return back()->with('success', 'Thêm địa chỉ mới thành công.');
     }
 
-    public function updateAddress(Request $request, \App\Models\UserAddress $address)
+    public function updateAddress(UpdateAddressRequest $request, UserAddress $address)
     {
         if ($address->user_id !== auth()->id()) abort(403);
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
-            'province_id' => 'required|string',
-            'district_id' => 'required|string',
-            'ward_code' => 'required|string',
-            'address' => 'required|string|max:255',
-        ]);
-
-        $address->update($validated);
+        $address->update($request->validated());
 
         return back()->with('success', 'Cập nhật địa chỉ thành công.');
     }
 
-    public function destroyAddress(\App\Models\UserAddress $address)
+    public function destroyAddress(UserAddress $address)
     {
         if ($address->user_id !== auth()->id()) abort(403);
         $address->delete();
         return back()->with('success', 'Đã xóa địa chỉ.');
     }
 
-    public function setDefaultAddress(\App\Models\UserAddress $address)
+    public function setDefaultAddress(UserAddress $address)
     {
         if ($address->user_id !== auth()->id()) abort(403);
         
@@ -159,11 +138,60 @@ class ProfileController extends Controller
         return view('client.profile.orders', compact('orders'));
     }
 
-    public function showOrder(\App\Models\Order $order)
+    public function showOrder(Order $order)
     {
-        if ($order->user_id !== auth()->id()) abort(403);
+        $isOwner = auth()->check() && $order->user_id === auth()->id();
+        $isSessionGuest = session('last_order_id') == $order->id;
+
+        if (!$isOwner && !$isSessionGuest && $order->user_id) {
+            abort(403);
+        }
         
         $order->load(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size']);
         return view('client.profile.order_show', compact('order'));
+    }
+
+    /**
+     * Hủy đơn hàng khi đang ở trạng thái 'pending' (Chờ xác nhận)
+     */
+    public function cancelOrder(Request $request, Order $order, \App\Services\InventoryService $inventoryService)
+    {
+        $isOwner = auth()->check() && $order->user_id === auth()->id();
+        $isSessionGuest = session('last_order_id') == $order->id;
+
+        if (!$isOwner && !$isSessionGuest) {
+            abort(403, 'Bạn không có quyền thực hiện thao tác này.');
+        }
+
+        // Chỉ cho phép hủy khi đơn hàng đang ở trạng thái Chờ xác nhận
+        if ($order->status !== 'pending') {
+            return redirect()->back()->with('error', 'Chỉ có thể hủy đơn hàng khi đơn hàng đang ở trạng thái "Chờ xác nhận".');
+        }
+
+        $reason = $request->input('cancel_reason', 'Khách hàng yêu cầu hủy đơn');
+
+        try {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($order, $reason, $inventoryService) {
+                $noteUpdate = $order->note ? ($order->note . " | [Lý do hủy: {$reason}]") : "[Lý do hủy: {$reason}]";
+
+                $order->update([
+                    'status' => 'cancelled',
+                    'note' => $noteUpdate,
+                ]);
+
+                // Hoàn lại tồn kho cho các biến thể trong đơn
+                $inventoryService->restockForOrder($order, auth()->id());
+
+                // Hoàn lại lượt sử dụng mã giảm giá nếu có
+                if ($order->coupon_id) {
+                    \App\Models\Coupon::where('id', $order->coupon_id)->decrement('used_count');
+                }
+            });
+
+            return redirect()->back()->with('success', "Đơn hàng #ORD-{$order->id} đã được hủy thành công. Tồn kho sản phẩm đã được hoàn lại.");
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Cancel Order Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Có lỗi xảy ra khi hủy đơn hàng: ' . $e->getMessage());
+        }
     }
 }

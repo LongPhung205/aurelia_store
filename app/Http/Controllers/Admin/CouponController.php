@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreCouponRequest;
+use App\Http\Requests\Admin\UpdateCouponRequest;
 use App\Models\Coupon;
-use Illuminate\Http\Request;
 
 class CouponController extends Controller
 {
@@ -19,21 +20,9 @@ class CouponController extends Controller
         return view('admin.coupons.create');
     }
 
-    public function store(Request $request)
+    public function store(StoreCouponRequest $request)
     {
-        $validated = $request->validate([
-            'code' => 'required|string|max:50|unique:coupons,code',
-            'name' => 'required|string|max:255',
-            'type' => 'required|in:fixed,percent',
-            'value' => 'required|numeric|min:0',
-            'min_order_value' => 'nullable|numeric|min:0',
-            'max_discount' => 'nullable|numeric|min:0',
-            'start_time' => 'required|date',
-            'end_time' => 'required|date|after:start_time',
-            'usage_limit' => 'nullable|integer|min:1',
-            'usage_limit_per_user' => 'nullable|integer|min:1',
-        ]);
-
+        $validated = $request->validated();
         $validated['is_active'] = $request->has('is_active');
 
         Coupon::create($validated);
@@ -45,21 +34,9 @@ class CouponController extends Controller
         return view('admin.coupons.edit', compact('coupon'));
     }
 
-    public function update(Request $request, Coupon $coupon)
+    public function update(UpdateCouponRequest $request, Coupon $coupon)
     {
-        $validated = $request->validate([
-            'code' => 'required|string|max:50|unique:coupons,code,' . $coupon->id,
-            'name' => 'required|string|max:255',
-            'type' => 'required|in:fixed,percent',
-            'value' => 'required|numeric|min:0',
-            'min_order_value' => 'nullable|numeric|min:0',
-            'max_discount' => 'nullable|numeric|min:0',
-            'start_time' => 'required|date',
-            'end_time' => 'required|date|after:start_time',
-            'usage_limit' => 'nullable|integer|min:1',
-            'usage_limit_per_user' => 'nullable|integer|min:1',
-        ]);
-
+        $validated = $request->validated();
         $validated['is_active'] = $request->has('is_active');
 
         $coupon->update($validated);

@@ -47,12 +47,16 @@ Route::prefix('checkout')->name('checkout.')->group(function () {
     Route::post('/prepare', [Client\CheckoutController::class, 'prepare'])->name('prepare');
     Route::get('/', [Client\CheckoutController::class, 'index'])->name('index');
     Route::post('/', [Client\CheckoutController::class, 'store'])->name('store');
+    Route::get('/success/{order}', [Client\CheckoutController::class, 'success'])->name('success');
     
     // AJAX Location Routes for GHN
     Route::get('/get-districts', [Client\CheckoutController::class, 'getDistricts'])->name('get_districts');
     Route::get('/get-wards', [Client\CheckoutController::class, 'getWards'])->name('get_wards');
     Route::post('/calculate-fee', [Client\CheckoutController::class, 'calculateFee'])->name('calculate_fee');
 });
+
+// Order Cancel Route (Public / Auth)
+Route::post('/orders/{order}/cancel', [Client\ProfileController::class, 'cancelOrder'])->name('orders.cancel');
 
 // PayOS Routes
 Route::prefix('payos')->name('payos.')->group(function () {
@@ -97,6 +101,7 @@ Route::middleware('auth')->group(function () {
     // Orders
     Route::get('/profile/orders', [Client\ProfileController::class, 'orders'])->name('profile.orders');
     Route::get('/profile/orders/{order}', [Client\ProfileController::class, 'showOrder'])->name('profile.orders.show');
+    Route::post('/profile/orders/{order}/cancel', [Client\ProfileController::class, 'cancelOrder'])->name('profile.orders.cancel');
 
     // Wishlist Routes
     Route::get('/wishlist', [Client\WishlistController::class, 'index'])->name('wishlist.index');
@@ -128,6 +133,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::post('orders/{order}/sync-ghn', [Admin\OrderController::class, 'syncGhnStatus'])->name('orders.sync_ghn');
     Route::post('orders/{order}/confirm-ghn', [Admin\OrderController::class, 'confirmAndCreateGhn'])->name('orders.confirm_ghn');
     Route::post('orders/{order}/status', [Admin\OrderController::class, 'updateStatus'])->name('orders.update_status');
+
+    // Finance & Transactions
+    Route::get('finance', [Admin\FinanceController::class, 'index'])->name('finance.index');
+    Route::get('transactions', [Admin\TransactionController::class, 'index'])->name('transactions.index');
+    Route::patch('transactions/{transaction}', [Admin\TransactionController::class, 'update'])->name('transactions.update');
 
     // Warehouse & Inventory Routes
     Route::resource('imports', Admin\ImportController::class);

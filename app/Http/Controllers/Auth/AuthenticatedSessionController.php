@@ -32,7 +32,7 @@ class AuthenticatedSessionController extends Controller
         app(\App\Services\CartService::class)->mergeGuestCart();
 
         if (auth()->user()->role === 'admin') {
-            return redirect()->intended(route('admin.dashboard', absolute: false));
+            return redirect()->route('admin.dashboard');
         }
         
         return redirect()->intended(route('home', absolute: false));

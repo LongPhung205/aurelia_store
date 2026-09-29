@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreBannerRequest;
+use App\Http\Requests\Admin\UpdateBannerRequest;
 use App\Models\Banner;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -12,10 +15,31 @@ class BannerController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $banners = Banner::orderBy('position')->get();
-        return view('admin.banners.index', compact('banners'));
+        $currentType = $request->get('type', 'all');
+
+        $query = Banner::with('category')->orderBy('position')->latest();
+
+        if ($currentType === 'home_slider') {
+            $query->where(function ($q) {
+                $q->where('type', 'home_slider')->orWhereNull('type');
+            });
+        } elseif ($currentType === 'category_header') {
+            $query->where('type', 'category_header');
+        }
+
+        $banners = $query->paginate(15)->withQueryString();
+
+        $counts = [
+            'all' => Banner::count(),
+            'home_slider' => Banner::where(function ($q) {
+                $q->where('type', 'home_slider')->orWhereNull('type');
+            })->count(),
+            'category_header' => Banner::where('type', 'category_header')->count(),
+        ];
+
+        return view('admin.banners.index', compact('banners', 'currentType', 'counts'));
     }
 
     /**
@@ -23,21 +47,16 @@ class BannerController extends Controller
      */
     public function create()
     {
-        return view('admin.banners.create');
+        $categoryTree = $this->getCategoryTree();
+        return view('admin.banners.create', compact('categoryTree'));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreBannerRequest $request)
     {
-        $validated = $request->validate([
-            'title' => 'nullable|string|max:255',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-            'link' => 'nullable|string|max:255',
-            'position' => 'nullable|integer',
-            'is_active' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('banners', 'public');
@@ -46,6 +65,10 @@ class BannerController extends Controller
 
         $validated['is_active'] = $request->has('is_active');
         $validated['position'] = $validated['position'] ?? 0;
+
+        if (($validated['type'] ?? 'home_slider') === 'home_slider') {
+            $validated['category_id'] = null;
+        }
 
         Banner::create($validated);
 
@@ -57,21 +80,16 @@ class BannerController extends Controller
      */
     public function edit(Banner $banner)
     {
-        return view('admin.banners.edit', compact('banner'));
+        $categoryTree = $this->getCategoryTree();
+        return view('admin.banners.edit', compact('banner', 'categoryTree'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Banner $banner)
+    public function update(UpdateBannerRequest $request, Banner $banner)
     {
-        $validated = $request->validate([
-            'title' => 'nullable|string|max:255',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-            'link' => 'nullable|string|max:255',
-            'position' => 'nullable|integer',
-            'is_active' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         if ($request->hasFile('image')) {
             // Delete old image
@@ -84,6 +102,10 @@ class BannerController extends Controller
 
         $validated['is_active'] = $request->has('is_active');
         $validated['position'] = $validated['position'] ?? 0;
+
+        if (($validated['type'] ?? 'home_slider') === 'home_slider') {
+            $validated['category_id'] = null;
+        }
 
         $banner->update($validated);
 
@@ -98,9 +120,34 @@ class BannerController extends Controller
         if ($banner->image_url && Storage::disk('public')->exists($banner->image_url)) {
             Storage::disk('public')->delete($banner->image_url);
         }
-        
+
         $banner->delete();
 
         return redirect()->route('admin.banners.index')->with('success', 'Banner đã được xóa thành công.');
+    }
+
+    /**
+     * Helper to build flattened category tree for select dropdown.
+     */
+    protected function getCategoryTree()
+    {
+        $categories = Category::all();
+        $tree = [];
+
+        $buildTree = function ($parentId = null, $prefix = '') use (&$buildTree, $categories, &$tree) {
+            $children = $categories->where('parent_id', $parentId);
+            foreach ($children as $child) {
+                $tree[] = [
+                    'id' => $child->id,
+                    'name' => $prefix . $child->name,
+                    'slug' => $child->slug,
+                ];
+                $buildTree($child->id, $prefix . '— ');
+            }
+        };
+
+        $buildTree(null, '');
+
+        return $tree;
     }
 }

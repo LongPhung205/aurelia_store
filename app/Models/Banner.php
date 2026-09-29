@@ -11,11 +11,39 @@ class Banner extends Model
 
     protected $fillable = [
         'title',
+        'type',
+        'category_id',
         'image_url',
         'link',
         'position',
         'is_active',
     ];
+
+    /**
+     * Get the category associated with this banner.
+     */
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    /**
+     * Scope for Home slider banners.
+     */
+    public function scopeHome($query)
+    {
+        return $query->where(function($q) {
+            $q->where('type', 'home_slider')->orWhereNull('type');
+        })->whereNull('category_id');
+    }
+
+    /**
+     * Scope for Category header banners.
+     */
+    public function scopeCategoryHeader($query)
+    {
+        return $query->where('type', 'category_header');
+    }
 
     /**
      * Get the full URL for the banner image.

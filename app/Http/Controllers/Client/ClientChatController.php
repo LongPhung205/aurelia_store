@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Events\MessageSent;
+use App\Http\Requests\Client\OpenChatRequest;
+use App\Http\Requests\Client\SendChatMessageRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,14 +19,10 @@ class ClientChatController extends Controller
      * - Nếu không: tìm conversation open gần nhất của user (chat chung)
      * Trả về JSON để widget frontend dùng.
      */
-    public function openOrCreate(Request $request)
+    public function openOrCreate(OpenChatRequest $request)
     {
-        $request->validate([
-            'order_id' => 'nullable|exists:orders,id',
-        ]);
-
         $user    = Auth::user();
-        $orderId = $request->order_id;
+        $orderId = $request->validated()['order_id'] ?? null;
 
         if ($orderId) {
             $order = \App\Models\Order::where('id', $orderId)->where('user_id', $user->id)->first();
@@ -94,14 +92,10 @@ class ClientChatController extends Controller
     /**
      * Khách hàng gửi tin nhắn.
      */
-    public function sendMessage(Request $request)
+    public function sendMessage(SendChatMessageRequest $request)
     {
-        $request->validate([
-            'conversation_id' => 'required|exists:conversations,id',
-            'content'         => 'required|string|max:2000',
-        ]);
-
-        $conversation = Conversation::findOrFail($request->conversation_id);
+        $validated = $request->validated();
+        $conversation = Conversation::findOrFail($validated['conversation_id']);
 
         // Chỉ cho phép chủ conversation gửi tin
         if ($conversation->user_id !== Auth::id()) {
@@ -111,7 +105,7 @@ class ClientChatController extends Controller
         $message = Message::create([
             'conversation_id' => $conversation->id,
             'user_id'         => Auth::id(),
-            'content'         => $request->content,
+            'content'         => $validated['content'],
         ]);
 
         $conversation->touch();

@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StorePostRequest;
+use App\Http\Requests\Admin\UpdatePostRequest;
 use App\Models\Post;
-use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 
@@ -21,18 +22,10 @@ class PostController extends Controller
         return view('admin.posts.create');
     }
 
-    public function store(Request $request)
+    public function store(StorePostRequest $request)
     {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'excerpt' => 'nullable|string',
-            'content' => 'required|string',
-            'image' => 'nullable|image|max:10240',
-            'is_active' => 'boolean'
-        ]);
-
-        $data = $request->except('image');
-        $data['slug'] = Str::slug($request->title) . '-' . time();
+        $data = $request->validated();
+        $data['slug'] = Str::slug($data['title']) . '-' . time();
         $data['is_active'] = $request->has('is_active');
         $data['published_at'] = $data['is_active'] ? now() : null;
 
@@ -50,18 +43,10 @@ class PostController extends Controller
         return view('admin.posts.edit', compact('post'));
     }
 
-    public function update(Request $request, Post $post)
+    public function update(UpdatePostRequest $request, Post $post)
     {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'excerpt' => 'nullable|string',
-            'content' => 'required|string',
-            'image' => 'nullable|image|max:10240',
-            'is_active' => 'boolean'
-        ]);
-
-        $data = $request->except('image');
-        $data['slug'] = Str::slug($request->title) . '-' . time();
+        $data = $request->validated();
+        $data['slug'] = Str::slug($data['title']) . '-' . time();
         $data['is_active'] = $request->has('is_active');
         
         if ($data['is_active'] && !$post->published_at) {

@@ -70,7 +70,9 @@
                                 <a href="{{ route('admin.posts.edit', $post) }}" class="text-blue-600 hover:bg-blue-100 p-2 rounded-lg transition-colors dark:text-blue-500 dark:hover:bg-blue-900" title="Sửa">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <form action="{{ route('admin.posts.destroy', $post) }}" method="POST" class="inline-block" onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài viết này?');">
+                                <form action="{{ route('admin.posts.destroy', $post) }}" method="POST" class="inline-block form-delete"
+                                      data-confirm-title="Xóa bài viết?"
+                                      data-confirm-text="Bạn có chắc chắn muốn xóa bài viết này không?">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="text-red-600 hover:bg-red-100 p-2 rounded-lg transition-colors dark:text-red-500 dark:hover:bg-red-900" title="Xóa">

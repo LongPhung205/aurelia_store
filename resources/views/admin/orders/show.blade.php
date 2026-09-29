@@ -310,7 +310,12 @@
                                 <p class="text-sm text-slate-500 mb-4">Đơn hàng chưa có mã vận đơn GHN.</p>
                                 
                                 @if($order->status == 'pending' || $order->status == 'processing')
-                                <form action="{{ route('admin.orders.confirm_ghn', $order) }}" method="POST">
+                                <form action="{{ route('admin.orders.confirm_ghn', $order) }}" method="POST" class="form-confirm"
+                                      data-confirm-title="Đẩy đơn sang GHN?"
+                                      data-confirm-text="Xác nhận tạo đơn giao hàng và lấy mã vận đơn từ GHN cho đơn hàng #ORD-{{ $order->id }}?"
+                                      data-confirm-icon="question"
+                                      data-confirm-btn="<i class='bi bi-send-check mr-1'></i> Đẩy đơn GHN"
+                                      data-confirm-color="#2563eb">
                                     @csrf
                                     <x-admin.button type="submit" variant="primary" class="w-full justify-center" icon="bi bi-send-check">
                                         Tạo đơn GHN ngay
@@ -325,7 +330,12 @@
                     <x-admin.card title="Thao tác Đơn hàng" icon="bi bi-gear-fill" class="{{ $order->status == 'cancelled' ? 'opacity-50 pointer-events-none' : '' }}">
                         <div class="space-y-3">
                             <!-- Chuyển trạng thái -->
-                            <form action="{{ route('admin.orders.update_status', $order) }}" method="POST">
+                            <form action="{{ route('admin.orders.update_status', $order) }}" method="POST" class="form-confirm"
+                                  data-confirm-title="Cập nhật trạng thái?"
+                                  data-confirm-text="Xác nhận lưu thay đổi trạng thái cho đơn hàng #ORD-{{ $order->id }}?"
+                                  data-confirm-icon="question"
+                                  data-confirm-btn="<i class='bi bi-check2-circle mr-1'></i> Lưu cập nhật"
+                                  data-confirm-color="#2563eb">
                                 @csrf
                                 <div class="mb-3">
                                     <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5 uppercase">Cập nhật trạng thái</label>

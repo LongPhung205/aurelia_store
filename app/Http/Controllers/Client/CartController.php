@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Client\AddToCartRequest;
+use App\Http\Requests\Client\UpdateCartItemRequest;
+use App\Http\Requests\Client\RemoveCartItemRequest;
+use App\Models\Product;
 use App\Services\CartService;
-use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
@@ -29,7 +32,7 @@ class CartController extends Controller
         $inCartProductIds = $cart->items->pluck('productVariant.product.id')->filter()->unique()->toArray();
         
         // Lấy 4 sản phẩm ngẫu nhiên để gợi ý (Cross-selling)
-        $crossSellProducts = \App\Models\Product::where('status', 'active')
+        $crossSellProducts = Product::where('status', 'active')
             ->whereNotIn('id', $inCartProductIds)
             ->with(['primaryImage'])
             ->inRandomOrder()
@@ -39,37 +42,26 @@ class CartController extends Controller
         return view('client.cart.index', compact('cart', 'crossSellProducts'));
     }
 
-    public function add(Request $request)
+    public function add(AddToCartRequest $request)
     {
-        $request->validate([
-            'variant_id' => 'required|exists:product_variants,id',
-            'quantity' => 'required|integer|min:1',
-        ]);
-
-        $result = $this->cartService->addItem($request->variant_id, $request->quantity);
+        $validated = $request->validated();
+        $result = $this->cartService->addItem($validated['variant_id'], $validated['quantity']);
 
         return response()->json($result);
     }
 
-    public function update(Request $request)
+    public function update(UpdateCartItemRequest $request)
     {
-        $request->validate([
-            'cart_item_id' => 'required|exists:cart_items,id',
-            'quantity' => 'required|integer|min:0',
-        ]);
-
-        $result = $this->cartService->updateItem($request->cart_item_id, $request->quantity);
+        $validated = $request->validated();
+        $result = $this->cartService->updateItem($validated['cart_item_id'], $validated['quantity']);
 
         return response()->json($result);
     }
 
-    public function remove(Request $request)
+    public function remove(RemoveCartItemRequest $request)
     {
-        $request->validate([
-            'cart_item_id' => 'required|exists:cart_items,id',
-        ]);
-
-        $result = $this->cartService->removeItem($request->cart_item_id);
+        $validated = $request->validated();
+        $result = $this->cartService->removeItem($validated['cart_item_id']);
 
         return response()->json($result);
     }

@@ -37,10 +37,12 @@
                     <div class="flex items-center gap-3">
                         <button @click="editAddress({{ json_encode($address) }})" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Cập nhật</button>
                         @if(!$address->is_default)
-                            <form action="{{ route('profile.addresses.destroy', $address->id) }}" method="POST" class="inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa địa chỉ này?');">
+                            <form action="{{ route('profile.addresses.destroy', $address->id) }}" method="POST" class="inline form-delete"
+                                  data-confirm-title="Xóa địa chỉ nhận hàng?"
+                                  data-confirm-text="Bạn có chắc chắn muốn xóa địa chỉ này khỏi sổ địa chỉ không?">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="text-red-500 hover:text-red-700 text-sm font-medium">Xóa</button>
+                                <button type="submit" class="text-red-500 hover:text-red-700 text-sm font-medium cursor-pointer">Xóa</button>
                             </form>
                         @endif
                     </div>

@@ -15,13 +15,16 @@
                 <!-- Mega Menu (Desktop) -->
                 <nav class="hidden lg:flex space-x-8 items-center h-full">
                 <!-- Home Link -->
-                <a href="/" class="text-gray-700 hover:text-brand font-medium transition-colors h-full flex items-center border-b-2 border-transparent hover:border-brand">
+                <a href="/" class="{{ request()->is('/') ? 'text-brand border-brand' : 'text-gray-700 hover:text-brand border-transparent hover:border-brand' }} font-medium transition-colors h-full flex items-center border-b-2">
                     Trang chủ
                 </a>
                 
                 @foreach ($categories as $category)
+                    @php
+                        $isActiveCat = request()->is('danh-muc/' . $category->slug);
+                    @endphp
                     <div x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false" class="h-full flex items-center">
-                        <a href="#" class="text-gray-700 hover:text-brand font-medium transition-colors h-full flex items-center border-b-2 border-transparent hover:border-brand">
+                        <a href="{{ route('categories.show', $category->slug) }}" class="{{ $isActiveCat ? 'text-brand border-brand' : 'text-gray-700 hover:text-brand border-transparent hover:border-brand' }} font-medium transition-colors h-full flex items-center border-b-2">
                             {{ $category->name }}
                         </a>
                         
@@ -40,14 +43,14 @@
                                     <div class="grid grid-cols-4 gap-8">
                                         @foreach ($category->children as $child)
                                             <div>
-                                                <a href="#" class="font-bold text-gray-900 hover:text-brand transition-colors text-sm mb-2 block uppercase tracking-wider">
+                                                <a href="{{ route('categories.show', $child->slug) }}" class="font-bold text-gray-900 hover:text-brand transition-colors text-sm mb-2 block uppercase tracking-wider {{ request()->is('danh-muc/' . $child->slug) ? 'text-brand' : '' }}">
                                                     {{ $child->name }}
                                                 </a>
                                                 @if ($child->children->count() > 0)
                                                 <ul class="space-y-2 mt-4">
                                                     @foreach($child->children as $subChild)
                                                         <li>
-                                                            <a href="#" class="text-gray-500 hover:text-brand text-sm transition-colors">
+                                                            <a href="{{ route('categories.show', $subChild->slug) }}" class="text-sm transition-colors block py-0.5 {{ request()->is('danh-muc/' . $subChild->slug) ? 'text-brand font-semibold' : 'text-gray-500 hover:text-brand' }}">
                                                                 {{ $subChild->name }}
                                                             </a>
                                                         </li>
@@ -99,6 +102,12 @@
 
                 <!-- Account -->
                 @auth
+                    @if(auth()->user()->role === 'admin')
+                        <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg shadow-sm transition" title="Trang Quản Trị Admin">
+                            <i class="bi bi-speedometer2"></i>
+                            <span class="hidden sm:inline">Quản Trị</span>
+                        </a>
+                    @endif
                     <a href="{{ route('profile.index') }}" class="text-gray-600 hover:text-brand transition-colors text-lg" title="Hồ sơ cá nhân">
                         <i class="bi bi-person-fill text-brand"></i>
                     </a>
@@ -149,7 +158,7 @@
             <nav class="space-y-1">
                 <!-- Home Link Mobile -->
                 <div class="border-b border-gray-50 pb-2">
-                    <a href="/" class="block py-2 text-gray-800 font-medium hover:text-brand">
+                    <a href="/" class="block py-2 font-medium {{ request()->is('/') ? 'text-brand font-semibold' : 'text-gray-800 hover:text-brand' }}">
                         Trang chủ
                     </a>
                 </div>
@@ -157,7 +166,7 @@
                 @foreach ($categories as $category)
                     <div x-data="{ expanded: false }" class="border-b border-gray-50 pb-2">
                         <div class="flex items-center justify-between">
-                            <a href="#" class="block py-2 text-gray-800 font-medium hover:text-brand flex-grow">
+                            <a href="{{ route('categories.show', $category->slug) }}" class="block py-2 font-medium hover:text-brand flex-grow {{ request()->is('danh-muc/' . $category->slug) ? 'text-brand font-semibold' : 'text-gray-800' }}">
                                 {{ $category->name }}
                             </a>
                             @if ($category->children->count() > 0)
@@ -168,11 +177,22 @@
                         </div>
                         
                         @if ($category->children->count() > 0)
-                            <div x-show="expanded" class="pl-4 pb-2 space-y-2 mt-1" style="display: none;" x-transition>
+                            <div x-show="expanded" class="pl-3 pb-2 space-y-3 mt-1" style="display: none;" x-transition>
                                 @foreach ($category->children as $child)
-                                    <a href="#" class="block py-1.5 text-sm text-gray-500 hover:text-brand">
-                                        {{ $child->name }}
-                                    </a>
+                                    <div>
+                                        <a href="{{ route('categories.show', $child->slug) }}" class="block py-1 text-sm font-semibold uppercase tracking-wider {{ request()->is('danh-muc/' . $child->slug) ? 'text-brand' : 'text-gray-700 hover:text-brand' }}">
+                                            {{ $child->name }}
+                                        </a>
+                                        @if ($child->children->count() > 0)
+                                            <div class="pl-3 space-y-1 mt-1 border-l-2 border-gray-100">
+                                                @foreach ($child->children as $subChild)
+                                                    <a href="{{ route('categories.show', $subChild->slug) }}" class="block py-1 text-xs {{ request()->is('danh-muc/' . $subChild->slug) ? 'text-brand font-semibold' : 'text-gray-500 hover:text-brand' }}">
+                                                        {{ $subChild->name }}
+                                                    </a>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
                                 @endforeach
                             </div>
                         @endif
@@ -184,6 +204,12 @@
         <div class="mt-auto p-4 border-t border-gray-100 bg-gray-50">
             <div class="flex justify-around">
                 @auth
+                    @if(auth()->user()->role === 'admin')
+                        <a href="{{ route('admin.dashboard') }}" class="flex flex-col items-center text-slate-800 hover:text-primary-600">
+                            <i class="bi bi-speedometer2 text-xl mb-1"></i>
+                            <span class="text-xs font-medium">Quản trị</span>
+                        </a>
+                    @endif
                     <a href="{{ route('profile.index') }}" class="flex flex-col items-center text-brand hover:text-brand">
                         <i class="bi bi-person-fill text-xl mb-1"></i>
                         <span class="text-xs font-medium">Tài khoản</span>

@@ -44,6 +44,19 @@
                 {{ $label }}
             </span>
 
+            {{-- Nút hủy đơn hàng nếu đang chờ xác nhận --}}
+            @if($order->status === 'pending')
+                <form action="{{ route('orders.cancel', $order->id) }}" method="POST" class="form-cancel-order inline-block" data-order-id="{{ $order->id }}">
+                    @csrf
+                    <button type="button" class="btn-trigger-cancel inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold
+                           bg-red-50 text-red-700 border border-red-200
+                           hover:bg-red-100 hover:border-red-300 transition-colors">
+                        <i class="bi bi-x-circle-fill"></i>
+                        Hủy đơn hàng
+                    </button>
+                </form>
+            @endif
+
             {{-- Nút hỏi về đơn hàng này --}}
             <button id="btn-ask-order" data-order-id="{{ $order->id }}"
                 class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold

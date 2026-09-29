@@ -2,9 +2,10 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\Order;
+use App\Models\PaymentTransaction;
 use App\Models\ProductVariant;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use PayOS\PayOS;
@@ -32,10 +33,10 @@ class ReleaseUnpaidOrders extends Command
     {
         $this->info('Starting release of unpaid orders...');
 
-        $payOS = new PayOS(
-            env('PAYOS_CLIENT_ID'),
-            env('PAYOS_API_KEY'),
-            env('PAYOS_CHECKSUM_KEY')
+        $payOS = app()->bound(PayOS::class) ? app(PayOS::class) : new PayOS(
+            config('services.payos.client_id'),
+            config('services.payos.api_key'),
+            config('services.payos.checksum_key')
         );
 
         // Find orders created more than 30 minutes ago that are still pending
@@ -46,6 +47,7 @@ class ReleaseUnpaidOrders extends Command
 
         if ($orders->isEmpty()) {
             $this->info('No unpaid orders found.');
+
             return;
         }
 
@@ -53,29 +55,53 @@ class ReleaseUnpaidOrders extends Command
             $this->info("Processing order #{$order->id} (Method: {$order->payment_method})");
 
             try {
-                if ($order->payment_method === 'payos' && $order->shipping_order_code) {
-                    try {
-                        $paymentInfo = $payOS->getPaymentLinkInformation($order->shipping_order_code);
-                        
-                        if ($paymentInfo && isset($paymentInfo['status']) && $paymentInfo['status'] === 'PAID') {
-                            $this->info("Order #{$order->id} was actually paid. Updating status and skipping cancellation.");
-                            $order->update([
-                                'payment_status' => 'paid',
-                                'status' => '1' // Confirmed
-                            ]);
-                            continue; // Skip cancellation
+                if ($order->payment_method === 'payos') {
+                    $payosTransaction = PaymentTransaction::where('order_id', $order->id)
+                        ->where('payment_method', 'payos')
+                        ->latest()
+                        ->first();
+                    $payosOrderCode = $payosTransaction ? $payosTransaction->transaction_id : $order->shipping_order_code;
+
+                    if ($payosOrderCode) {
+                        try {
+                            $paymentInfo = $payOS->getPaymentLinkInformation((int) $payosOrderCode);
+
+                            if ($paymentInfo && isset($paymentInfo['status']) && $paymentInfo['status'] === 'PAID') {
+                                $this->info("Order #{$order->id} was actually paid. Updating status and skipping cancellation.");
+                                $order->update([
+                                    'payment_status' => 'paid',
+                                    'status' => 'processing',
+                                    'is_inventory_deducted' => true,
+                                ]);
+                                if ($payosTransaction) {
+                                    $payosTransaction->update([
+                                        'status' => 'success',
+                                        'response_data' => $paymentInfo,
+                                    ]);
+                                }
+
+                                continue; // Skip cancellation
+                            }
+                        } catch (\Throwable $e) {
+                            Log::warning("PayOS API check failed for Order #{$order->id}: ".$e->getMessage());
+
+                            continue;
                         }
-                    } catch (\Exception $e) {
-                        Log::warning("PayOS API check failed for Order #{$order->id}: " . $e->getMessage());
                     }
                 }
 
                 // 2. If definitely not paid, cancel order and restore stock safely
                 DB::transaction(function () use ($order) {
+                    $order = Order::where('id', $order->id)->lockForUpdate()->first();
+                    if (! $order || $order->payment_status === 'paid') {
+                        return;
+                    }
+
                     // Update order status first
                     $order->update([
                         'status' => 'cancelled',
-                        'payment_status' => 'failed'
+                        'payment_status' => 'failed',
+                        'is_inventory_deducted' => false,
                     ]);
 
                     // Restore stock for each item using lockForUpdate
@@ -93,8 +119,8 @@ class ReleaseUnpaidOrders extends Command
                 $this->info("Order #{$order->id} cancelled and stock restored successfully.");
 
             } catch (\Exception $e) {
-                Log::error("Failed to release order #{$order->id}: " . $e->getMessage());
-                $this->error("Failed to release order #{$order->id}: " . $e->getMessage());
+                Log::error("Failed to release order #{$order->id}: ".$e->getMessage());
+                $this->error("Failed to release order #{$order->id}: ".$e->getMessage());
             }
         }
 

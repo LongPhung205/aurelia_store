@@ -43,36 +43,44 @@ class ProductVariantController extends Controller
         $sizes = \App\Models\Size::whereIn('id', $sizeIds)->pluck('name', 'id');
         $productSlug = \Illuminate\Support\Str::slug($product->name);
 
-        \Illuminate\Support\Facades\DB::transaction(function() use ($data, $product, $colorImagePaths, $colors, $sizes, $productSlug) {
-            foreach ($data['variants'] as $variantData) {
-                $colorId = $variantData['color_id'] ?? null;
-                $sizeId = $variantData['size_id'] ?? null;
-                
-                $sku = $variantData['sku'] ?? null;
-                if (empty($sku)) {
-                    $skuParts = [$productSlug];
-                    if ($colorId && isset($colors[$colorId])) $skuParts[] = \Illuminate\Support\Str::slug($colors[$colorId]);
-                    if ($sizeId && isset($sizes[$sizeId])) $skuParts[] = \Illuminate\Support\Str::slug($sizes[$sizeId]);
-                    $sku = strtoupper($product->id . '-' . implode('-', $skuParts));
+        try {
+            \Illuminate\Support\Facades\DB::transaction(function() use ($data, $product, $colorImagePaths, $colors, $sizes, $productSlug) {
+                foreach ($data['variants'] as $variantData) {
+                    $colorId = $variantData['color_id'] ?? null;
+                    $sizeId = $variantData['size_id'] ?? null;
+                    
+                    $sku = $variantData['sku'] ?? null;
+                    if (empty($sku)) {
+                        $skuParts = [$productSlug];
+                        if ($colorId && isset($colors[$colorId])) $skuParts[] = \Illuminate\Support\Str::slug($colors[$colorId]);
+                        if ($sizeId && isset($sizes[$sizeId])) $skuParts[] = \Illuminate\Support\Str::slug($sizes[$sizeId]);
+                        $sku = strtoupper($product->id . '-' . implode('-', $skuParts));
+                    }
+
+                    $variant = ProductVariant::firstOrNew([
+                        'product_id' => $product->id,
+                        'color_id' => $colorId,
+                        'size_id' => $sizeId,
+                    ]);
+
+                    $variant->sku = $sku;
+                    $variant->price = $variantData['price'];
+                    $variant->is_active = true;
+                    if (!$variant->exists) $variant->stock_quantity = 0;
+                    if ($colorId && isset($colorImagePaths[$colorId])) $variant->thumbnail_url = $colorImagePaths[$colorId];
+                    
+                    $variant->save();
                 }
-
-                $variant = ProductVariant::firstOrNew([
-                    'product_id' => $product->id,
-                    'color_id' => $colorId,
-                    'size_id' => $sizeId,
-                ]);
-
-                $variant->sku = $sku;
-                $variant->price = $variantData['price'];
-                $variant->is_active = true;
-                if (!$variant->exists) $variant->stock_quantity = 0;
-                if ($colorId && isset($colorImagePaths[$colorId])) $variant->thumbnail_url = $colorImagePaths[$colorId];
-                
-                $variant->save();
+            });
+            
+            return redirect()->back()->with('success', 'Đã lưu các biến thể thành công.');
+        } catch (\Exception $e) {
+            foreach ($colorImagePaths as $path) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($path);
             }
-        });
-        
-        return redirect()->back()->with('success', 'Đã lưu các biến thể thành công.');
+
+            return redirect()->back()->withInput()->with('error', 'Có lỗi xảy ra khi lưu biến thể: ' . $e->getMessage());
+        }
     }
 
     /**

@@ -338,16 +338,159 @@
 
         {{-- Global Toast Notification (Alpine.js) --}}
         <div x-data="{ show: false, message: '', type: 'success' }"
-             @notify.window="message = $event.detail.message; type = $event.detail.type || 'success'; show = true; setTimeout(() => show = false, 3000)"
+             @notify.window="message = $event.detail.message; type = $event.detail.type || 'success'; show = true; setTimeout(() => show = false, 4000)"
              class="fixed top-24 right-4 z-[9999] transition-all duration-300 transform"
              :class="show ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'"
              style="display: none;" x-show="show">
-             <div class="px-6 py-4 rounded-lg shadow-xl text-white font-medium flex items-center gap-3"
-                  :class="type === 'success' ? 'bg-brand' : (type === 'error' ? 'bg-red-500' : 'bg-gray-800')">
-                  <i class="bi text-xl" :class="type === 'success' ? 'bi-check-circle' : 'bi-exclamation-triangle'"></i>
+             <div class="px-6 py-4 rounded-xl shadow-2xl text-white font-medium flex items-center gap-3"
+                  :class="type === 'success' ? 'bg-emerald-600' : (type === 'error' ? 'bg-rose-600' : 'bg-gray-800')">
+                  <i class="bi text-xl" :class="type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'"></i>
                   <span x-text="message"></span>
              </div>
         </div>
+
+        <!-- SweetAlert2 -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+        <!-- Flash messages to Toast -->
+        @if(session('success'))
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    window.dispatchEvent(new CustomEvent('notify', {
+                        detail: { message: @json(session('success')), type: 'success' }
+                    }));
+                });
+            </script>
+        @endif
+        @if(session('error'))
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    window.dispatchEvent(new CustomEvent('notify', {
+                        detail: { message: @json(session('error')), type: 'error' }
+                    }));
+                });
+            </script>
+        @endif
+        @if(session('warning'))
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    window.dispatchEvent(new CustomEvent('notify', {
+                        detail: { message: @json(session('warning')), type: 'error' }
+                    }));
+                });
+            </script>
+        @endif
+        @if($errors->any())
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    window.dispatchEvent(new CustomEvent('notify', {
+                        detail: { message: @json($errors->first()), type: 'error' }
+                    }));
+                });
+            </script>
+        @endif
+
+        <!-- Global SweetAlert2 & Confirmation Handlers -->
+        <script>
+            // Override native window.alert with modern SweetAlert2
+            window.alert = function(message) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Thông báo',
+                        text: String(message),
+                        icon: 'info',
+                        confirmButtonColor: '#e11d48',
+                        confirmButtonText: 'Đóng'
+                    });
+                } else {
+                    console.log('Alert:', message);
+                }
+            };
+
+            // Delegated submit handler for forms with .form-delete or .form-confirm
+            document.addEventListener('submit', function(e) {
+                const form = e.target;
+                if (!form || !form.classList) return;
+
+                const isDelete = form.classList.contains('form-delete');
+                const isConfirm = form.classList.contains('form-confirm');
+
+                if (isDelete || isConfirm) {
+                    e.preventDefault();
+                    const title = form.dataset.confirmTitle || (isDelete ? 'Xóa dữ liệu?' : 'Xác nhận thao tác?');
+                    const text = form.dataset.confirmText || (isDelete ? 'Hành động này không thể hoàn tác!' : 'Bạn có chắc chắn muốn tiếp tục?');
+                    const icon = form.dataset.confirmIcon || (isDelete ? 'warning' : 'question');
+                    const confirmBtn = form.dataset.confirmBtn || (isDelete ? '<i class="bi bi-trash mr-1"></i> Đồng ý xóa' : '<i class="bi bi-check-lg mr-1"></i> Xác nhận');
+                    const confirmColor = form.dataset.confirmColor || (isDelete ? '#e11d48' : '#2563eb');
+
+                    Swal.fire({
+                        title: title,
+                        text: text,
+                        icon: icon,
+                        showCancelButton: true,
+                        confirmButtonColor: confirmColor,
+                        cancelButtonColor: '#64748b',
+                        confirmButtonText: confirmBtn,
+                        cancelButtonText: 'Hủy',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                }
+            });
+
+            // Global Order Cancellation Handler
+            document.addEventListener('DOMContentLoaded', function () {
+                document.querySelectorAll('.form-cancel-order').forEach(form => {
+                    const btn = form.querySelector('.btn-trigger-cancel');
+                    if (!btn) return;
+
+                    btn.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const orderId = form.dataset.orderId || '';
+
+                        Swal.fire({
+                            title: 'Hủy đơn hàng #' + (orderId ? 'ORD-' + orderId : ''),
+                            text: 'Bạn có chắc chắn muốn hủy đơn hàng này không? Số lượng sản phẩm sẽ được hoàn trả lại kho.',
+                            icon: 'warning',
+                            input: 'select',
+                            inputOptions: {
+                                'Đổi ý không muốn mua nữa': 'Đổi ý không muốn mua nữa',
+                                'Muốn thay đổi địa chỉ nhận hàng': 'Muốn thay đổi địa chỉ nhận hàng',
+                                'Muốn đổi phân loại/kích cỡ': 'Muốn đổi phân loại/kích cỡ',
+                                'Đặt nhầm đơn hàng': 'Đặt nhầm đơn hàng',
+                                'Khác': 'Lý do khác'
+                            },
+                            inputPlaceholder: 'Chọn lý do hủy...',
+                            showCancelButton: true,
+                            confirmButtonColor: '#e11d48',
+                            cancelButtonColor: '#64748b',
+                            confirmButtonText: '<i class="bi bi-x-circle mr-1"></i> Đồng ý hủy',
+                            cancelButtonText: 'Giữ lại đơn hàng',
+                            inputValidator: (value) => {
+                                if (!value) {
+                                    return 'Vui lòng chọn lý do hủy đơn!';
+                                }
+                            }
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                let reasonInput = form.querySelector('input[name="cancel_reason"]');
+                                if (!reasonInput) {
+                                    reasonInput = document.createElement('input');
+                                    reasonInput.type = 'hidden';
+                                    reasonInput.name = 'cancel_reason';
+                                    form.appendChild(reasonInput);
+                                }
+                                reasonInput.value = result.value || 'Khách hàng yêu cầu hủy đơn';
+                                form.submit();
+                            }
+                        });
+                    });
+                });
+            });
+        </script>
 
     </body>
 </html>

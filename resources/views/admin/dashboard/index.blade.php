@@ -180,8 +180,7 @@
 </div>
 @endsection
 
-@stack('scripts')
-@section('scripts')
+@push('scripts')
 <!-- Load ApexCharts -->
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
@@ -339,4 +338,4 @@ document.addEventListener('DOMContentLoaded', function () {
     observer.observe(document.documentElement, { attributes: true });
 });
 </script>
-@endsection
+@endpush

@@ -1,6 +1,7 @@
 @extends('layouts.client')
 
 @section('full_width_top')
+@if(isset($banners) && $banners->isNotEmpty())
 <!-- Hero Banner Carousel -->
 <div x-data="carousel()" x-init="init()" class="relative w-full overflow-hidden h-[300px] md:h-[500px]">
     <!-- Slides -->
@@ -33,6 +34,7 @@
         </template>
     </div>
 </div>
+@endif
 @endsection
 
 @section('content')
@@ -42,7 +44,7 @@
 <section class="mb-12 mt-12 md:mt-16">
     <div class="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-12 md:gap-y-16">
         @foreach($homeCategories as $category)
-        <a href="#" class="group relative bg-[#f4f6f8] rounded-xl flex items-center p-5 md:p-8 hover:shadow-lg transition-all duration-300 h-28 md:h-36">
+        <a href="{{ route('categories.show', $category->slug) }}" class="group relative bg-[#f4f6f8] rounded-xl flex items-center p-5 md:p-8 hover:shadow-lg transition-all duration-300 h-28 md:h-36">
             <!-- Tên danh mục -->
             <span class="font-bold text-gray-800 uppercase tracking-wide group-hover:text-brand transition-colors relative z-10 text-sm md:text-lg w-1/2 md:w-3/5 break-words">
                 {{ $category->name }}

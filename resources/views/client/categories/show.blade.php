@@ -5,9 +5,12 @@
 @section('full_width_top')
 {{-- Category Banner --}}
 <section class="bg-gray-900 py-12 md:py-16 relative overflow-hidden mb-8">
-    @if($category->image)
+    @php
+        $heroBannerUrl = $category->hero_banner_url;
+    @endphp
+    @if($heroBannerUrl)
         <div class="absolute inset-0">
-            <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="w-full h-full object-cover opacity-40">
+            <img src="{{ $heroBannerUrl }}" alt="{{ $category->name }}" class="w-full h-full object-cover opacity-40">
             <div class="absolute inset-0 bg-gradient-to-b from-black/40 to-black/70"></div>
         </div>
     @endif

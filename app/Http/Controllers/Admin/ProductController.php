@@ -165,43 +165,55 @@ class ProductController extends Controller
             $data['slug'] = Str::slug($data['name']);
         }
         
-        \Illuminate\Support\Facades\DB::transaction(function () use ($data, $request, $product) {
-            $product->update([
-                'name' => $data['name'],
-                'slug' => $data['slug'],
-                'description' => $data['description'] ?? null,
-                'material' => $data['material'] ?? null,
-                'status' => $data['status'],
-            ]);
+        $uploadedFiles = [];
 
-            $product->categories()->sync($data['category_ids']);
+        try {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($data, $request, $product, &$uploadedFiles) {
+                $product->update([
+                    'name' => $data['name'],
+                    'slug' => $data['slug'],
+                    'description' => $data['description'] ?? null,
+                    'material' => $data['material'] ?? null,
+                    'status' => $data['status'],
+                ]);
 
-            // Handle color images upload if present (from the 'Ảnh theo phân loại' tab)
-            if ($request->hasFile('color_images')) {
-                foreach ($request->file('color_images') as $colorId => $file) {
-                    $path = $file->store('variants', 'public');
-                    // Update all variants of this product with this color
-                    \App\Models\ProductVariant::where('product_id', $product->id)
-                                              ->where('color_id', $colorId)
-                                              ->update(['thumbnail_url' => $path]);
+                $product->categories()->sync($data['category_ids']);
+
+                // Handle color images upload if present (from the 'Ảnh theo phân loại' tab)
+                if ($request->hasFile('color_images')) {
+                    foreach ($request->file('color_images') as $colorId => $file) {
+                        $path = $file->store('variants', 'public');
+                        $uploadedFiles[] = $path;
+                        // Update all variants of this product with this color
+                        \App\Models\ProductVariant::where('product_id', $product->id)
+                                                  ->where('color_id', $colorId)
+                                                  ->update(['thumbnail_url' => $path]);
+                    }
                 }
+
+                // Handle image upload if present
+                if ($request->hasFile('images')) {
+                    foreach ($request->file('images') as $file) {
+                        $path = $file->store('products', 'public');
+                        $uploadedFiles[] = $path;
+                        \App\Models\ProductImage::create([
+                            'product_id' => $product->id,
+                            'image_url' => $path,
+                            'variant_id' => null,
+                            'is_primary' => false,
+                        ]);
+                    }
+                }
+            });
+
+            return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được cập nhật thành công.');
+        } catch (\Exception $e) {
+            foreach ($uploadedFiles as $path) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($path);
             }
 
-            // Handle image upload if present
-            if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $file) {
-                    $path = $file->store('products', 'public');
-                    \App\Models\ProductImage::create([
-                        'product_id' => $product->id,
-                        'image_url' => $path,
-                        'variant_id' => null,
-                        'is_primary' => false,
-                    ]);
-                }
-            }
-        });
-
-        return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được cập nhật thành công.');
+            return redirect()->back()->withInput()->with('error', 'Có lỗi xảy ra khi cập nhật sản phẩm: ' . $e->getMessage());
+        }
     }
 
     public function destroy(Product $product)

@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\AddFlashSaleItemRequest;
+use App\Http\Requests\Admin\StoreFlashSaleRequest;
+use App\Http\Requests\Admin\UpdateFlashSaleRequest;
 use App\Models\FlashSale;
 use App\Models\FlashSaleItem;
 use App\Models\Product;
-use Illuminate\Http\Request;
 
 class FlashSaleController extends Controller
 {
@@ -21,14 +23,9 @@ class FlashSaleController extends Controller
         return view('admin.flash_sales.create');
     }
 
-    public function store(Request $request)
+    public function store(StoreFlashSaleRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'start_time' => 'required|date',
-            'end_time' => 'required|date|after:start_time',
-        ]);
-        
+        $validated = $request->validated();
         $validated['is_active'] = $request->has('is_active');
 
         FlashSale::create($validated);
@@ -40,14 +37,9 @@ class FlashSaleController extends Controller
         return view('admin.flash_sales.edit', compact('flash_sale'));
     }
 
-    public function update(Request $request, FlashSale $flash_sale)
+    public function update(UpdateFlashSaleRequest $request, FlashSale $flash_sale)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'start_time' => 'required|date',
-            'end_time' => 'required|date|after:start_time',
-        ]);
-
+        $validated = $request->validated();
         $validated['is_active'] = $request->has('is_active');
 
         $flash_sale->update($validated);
@@ -69,17 +61,13 @@ class FlashSaleController extends Controller
         return view('admin.flash_sales.manage_items', compact('flash_sale', 'items', 'products'));
     }
 
-    public function addItem(Request $request, FlashSale $flash_sale)
+    public function addItem(AddFlashSaleItemRequest $request, FlashSale $flash_sale)
     {
-        $request->validate([
-            'selected_products' => 'required|array',
-            'selected_products.*' => 'exists:products,id',
-            'products' => 'required|array',
-        ]);
-
+        $validated = $request->validated();
         $addedCount = 0;
-        foreach ($request->selected_products as $productId) {
-            $data = $request->products[$productId] ?? [];
+
+        foreach ($validated['selected_products'] as $productId) {
+            $data = $validated['products'][$productId] ?? [];
             $price = $data['flash_sale_price'] ?? 0;
             $qty = $data['quantity'] ?? 1;
 

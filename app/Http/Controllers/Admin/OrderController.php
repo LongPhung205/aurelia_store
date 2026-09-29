@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\UpdateOrderStatusRequest;
 use App\Models\Order;
 use App\Services\GhnService;
+use App\Services\InventoryService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -89,11 +92,9 @@ class OrderController extends Controller
         return redirect()->back()->with('error', 'Không thể đồng bộ với GHN lúc này.');
     }
 
-    public function updateStatus(Request $request, Order $order, \App\Services\InventoryService $inventoryService)
+    public function updateStatus(UpdateOrderStatusRequest $request, Order $order, InventoryService $inventoryService)
     {
-        $request->validate([
-            'status' => 'required|in:pending,processing,ready_to_pick,shipping,completed,cancelled'
-        ]);
+        $newStatus = $request->validated()['status'];
 
         $levels = [
             'pending' => 1,
@@ -105,23 +106,25 @@ class OrderController extends Controller
         ];
 
         // Prevent reversing from shipping or completed to an earlier state
-        if ($levels[$order->status] >= 4 && $levels[$request->status] < $levels[$order->status]) {
+        if ($levels[$order->status] >= 4 && $levels[$newStatus] < $levels[$order->status]) {
             return redirect()->back()->with('error', 'Không thể lùi trạng thái đơn hàng khi đã ở mức Đang giao hoặc Hoàn thành.');
         }
 
         try {
-            if (in_array($request->status, ['shipping', 'completed'])) {
-                $inventoryService->deductForOrder($order);
-            } elseif ($request->status == 'cancelled') {
-                $inventoryService->restockForOrder($order);
-            }
-            
-            $order->update(['status' => $request->status]);
+            DB::transaction(function () use ($order, $newStatus, $inventoryService) {
+                if (in_array($newStatus, ['shipping', 'completed'])) {
+                    $inventoryService->deductForOrder($order);
+                } elseif ($newStatus === 'cancelled') {
+                    $inventoryService->restockForOrder($order);
+                }
+                
+                $order->update(['status' => $newStatus]);
 
-            // Nếu chuyển sang completed thì tự động cập nhật thanh toán
-            if ($request->status == 'completed' && $order->payment_status != 'paid') {
-                $order->update(['payment_status' => 'paid']);
-            }
+                // Nếu chuyển sang completed thì tự động cập nhật thanh toán
+                if ($newStatus === 'completed' && $order->payment_status !== 'paid') {
+                    $order->update(['payment_status' => 'paid']);
+                }
+            });
 
             return redirect()->back()->with('success', 'Đã cập nhật trạng thái đơn hàng thành công.');
         } catch (\Exception $e) {
@@ -151,8 +154,8 @@ class OrderController extends Controller
             'required_note' => 'CHOXEMHANGKHONGTHU',
             'return_phone' => '0339999999', // SĐT Shop
             'return_address' => 'Hà Nội',
-            'return_district_id' => (int)env('GHN_FROM_DISTRICT_ID'),
-            'return_ward_code' => (string)env('GHN_FROM_WARD_CODE'),
+            'return_district_id' => (int)config('services.ghn.from_district_id'),
+            'return_ward_code' => (string)config('services.ghn.from_ward_code'),
             'client_order_code' => 'ORD-' . $order->id,
             'to_name' => $order->customer_name,
             'to_phone' => $order->customer_phone,
