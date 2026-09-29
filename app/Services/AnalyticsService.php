@@ -263,18 +263,24 @@ class AnalyticsService
                 $groupedStats[$rootName] = [
                     'name' => $rootName,
                     'revenue' => 0,
+                    'total_revenue' => 0,
                     'quantity' => 0,
+                    'total_sold' => 0,
                 ];
             }
 
             $groupedStats[$rootName]['revenue'] += $rev;
+            $groupedStats[$rootName]['total_revenue'] += $rev;
             $groupedStats[$rootName]['quantity'] += $qty;
+            $groupedStats[$rootName]['total_sold'] += $qty;
             $totalRev += $rev;
         }
 
         // Calculate % share
         foreach ($groupedStats as &$stat) {
-            $stat['share'] = $totalRev > 0 ? round(($stat['revenue'] / $totalRev) * 100, 1) : 0;
+            $share = $totalRev > 0 ? round(($stat['revenue'] / $totalRev) * 100, 1) : 0;
+            $stat['share'] = $share;
+            $stat['revenue_share'] = $share;
         }
 
         // Prepare chart structure
@@ -385,16 +391,23 @@ class AnalyticsService
         }
 
         // 2. Slow Moving Products (In-stock, sold < 3 in period)
-        $topSoldProductIds = OrderItem::join('orders', 'order_items.order_id', '=', 'orders.id')
+        $soldCounts = OrderItem::join('orders', 'order_items.order_id', '=', 'orders.id')
             ->join('product_variants', 'order_items.product_variant_id', '=', 'product_variants.id')
             ->whereBetween('orders.created_at', [$currentPeriod['start'], $currentPeriod['end']])
             ->where('orders.status', '!=', 'cancelled')
             ->groupBy('product_variants.product_id')
-            ->havingRaw('SUM(order_items.quantity) >= 3')
-            ->pluck('product_variants.product_id')
+            ->select('product_variants.product_id', DB::raw('SUM(order_items.quantity) as sold_qty'))
+            ->pluck('sold_qty', 'product_id')
             ->toArray();
 
-        $slowProducts = Product::where('is_active', true)
+        $topSoldProductIds = [];
+        foreach ($soldCounts as $prodId => $qty) {
+            if ($qty >= 3) {
+                $topSoldProductIds[] = $prodId;
+            }
+        }
+
+        $slowProducts = Product::where('status', 'active')
             ->whereNotIn('id', $topSoldProductIds)
             ->with(['variants', 'categories', 'images'])
             ->get()
@@ -408,14 +421,7 @@ class AnalyticsService
             ->values();
 
         foreach ($slowProducts as $p) {
-            $soldInPeriod = (int) OrderItem::join('orders', 'order_items.order_id', '=', 'orders.id')
-                ->join('product_variants', 'order_items.product_variant_id', '=', 'product_variants.id')
-                ->where('product_variants.product_id', $p->id)
-                ->whereBetween('orders.created_at', [$currentPeriod['start'], $currentPeriod['end']])
-                ->where('orders.status', '!=', 'cancelled')
-                ->sum('order_items.quantity');
-
-            $p->sold_in_period = $soldInPeriod;
+            $p->sold_in_period = (int) ($soldCounts[$p->id] ?? 0);
             $p->total_stock = $p->variants->sum('stock_quantity');
             $p->sku = $p->variants->first() ? $p->variants->first()->sku : 'SP-' . $p->id;
             $p->category_name = $p->categories->first() ? $p->categories->first()->name : 'Chưa phân loại';

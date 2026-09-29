@@ -397,17 +397,17 @@
                                     <i class="bi bi-folder mr-1.5 text-primary-500"></i>{{ $cat['name'] }}
                                 </td>
                                 <td class="px-4 py-3 text-center font-bold text-slate-700 dark:text-slate-300">
-                                    {{ number_format($cat['total_sold']) }} sản phẩm
+                                    {{ number_format($cat['total_sold'] ?? $cat['quantity'] ?? 0) }} sản phẩm
                                 </td>
                                 <td class="px-4 py-3 text-right font-black text-indigo-600 dark:text-indigo-400">
-                                    {{ number_format($cat['total_revenue'], 0, ',', '.') }} đ
+                                    {{ number_format($cat['total_revenue'] ?? $cat['revenue'] ?? 0, 0, ',', '.') }} đ
                                 </td>
                                 <td class="px-4 py-3">
                                     <div class="flex items-center gap-3">
                                         <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2.5 overflow-hidden">
-                                            <div class="bg-indigo-600 h-2.5 rounded-full" style="width: {{ $cat['revenue_share'] }}%"></div>
+                                            <div class="bg-indigo-600 h-2.5 rounded-full" style="width: {{ $cat['revenue_share'] ?? $cat['share'] ?? 0 }}%"></div>
                                         </div>
-                                        <span class="text-xs font-bold text-slate-700 dark:text-slate-300 min-w-10">{{ $cat['revenue_share'] }}%</span>
+                                        <span class="text-xs font-bold text-slate-700 dark:text-slate-300 min-w-10">{{ $cat['revenue_share'] ?? $cat['share'] ?? 0 }}%</span>
                                     </div>
                                 </td>
                             </tr>
