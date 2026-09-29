@@ -163,4 +163,123 @@ class MarketBasketMiningService
             'top_rules' => array_slice($enrichedRules, 0, 3),
         ];
     }
+
+    /**
+     * Finds the best product to bundle with a given product using mined association rules.
+     */
+    public function getFrequentlyBoughtTogether(int $productId, int $limit = 1): ?array
+    {
+        $transactions = $this->extractTransactions();
+        if (empty($transactions)) {
+            return null;
+        }
+
+        // Mine with inclusive threshold for cross-sell discovery (minConfidence 1%, minLift 0.0)
+        $rawRules = $this->calculateRulesFromTransactions($transactions, 1.0, 0.0);
+        if (empty($rawRules)) {
+            return null;
+        }
+
+        // Gather all rules involving $productId
+        $candidates = [];
+        foreach ($rawRules as $rule) {
+            if ($rule['antecedent_id'] === $productId) {
+                $candidates[] = [
+                    'paired_id' => $rule['consequent_id'],
+                    'co_count' => $rule['co_count'],
+                    'lift' => $rule['lift'],
+                    'confidence' => $rule['confidence'],
+                    'support' => $rule['support'],
+                ];
+            } elseif ($rule['consequent_id'] === $productId) {
+                $candidates[] = [
+                    'paired_id' => $rule['antecedent_id'],
+                    'co_count' => $rule['co_count'],
+                    'lift' => $rule['lift'],
+                    'confidence' => $rule['confidence'],
+                    'support' => $rule['support'],
+                ];
+            }
+        }
+
+        if (empty($candidates)) {
+            return null;
+        }
+
+        // Sort by co_count DESC, then lift DESC
+        usort($candidates, function($a, $b) {
+            if ($b['co_count'] === $a['co_count']) {
+                return $b['lift'] <=> $a['lift'];
+            }
+            return $b['co_count'] <=> $a['co_count'];
+        });
+
+        $matchedRule = $candidates[0];
+
+        $mainProduct = Product::with(['variants.color', 'variants.size', 'images'])->find($productId);
+        $pairedProduct = Product::with(['variants.color', 'variants.size', 'images'])->find($matchedRule['paired_id']);
+
+        if (!$mainProduct || !$pairedProduct || $pairedProduct->status !== 'active') {
+            return null;
+        }
+
+        $mainVariant = $mainProduct->variants->where('stock_quantity', '>', 0)->first() ?? $mainProduct->variants->first();
+        $pairedVariant = $pairedProduct->variants->where('stock_quantity', '>', 0)->first() ?? $pairedProduct->variants->first();
+
+        if (!$mainVariant || !$pairedVariant) {
+            return null;
+        }
+
+        $mainPrice = (float) ($mainVariant->price ?: $mainProduct->base_price);
+        $pairedPrice = (float) ($pairedVariant->price ?: $pairedProduct->base_price);
+        $totalOriginal = $mainPrice + $pairedPrice;
+        $discountPercent = 5; // 5% combo discount
+        $bundlePrice = round($totalOriginal * (1 - $discountPercent / 100), -3);
+        $savings = $totalOriginal - $bundlePrice;
+
+        $formatImg = function($p) {
+            $img = $p->primary_image_url;
+            if (!$img) return null;
+            return (str_starts_with($img, 'http://') || str_starts_with($img, 'https://'))
+                ? $img
+                : asset('storage/' . ltrim($img, '/'));
+        };
+
+        return [
+            'main_product' => [
+                'id' => $mainProduct->id,
+                'name' => $mainProduct->name,
+                'slug' => $mainProduct->slug,
+                'price' => $mainPrice,
+                'variant_id' => $mainVariant->id,
+                'sku' => $mainVariant->sku,
+                'thumbnail' => $formatImg($mainProduct),
+            ],
+            'paired_product' => [
+                'id' => $pairedProduct->id,
+                'name' => $pairedProduct->name,
+                'slug' => $pairedProduct->slug,
+                'price' => $pairedPrice,
+                'variant_id' => $pairedVariant->id,
+                'sku' => $pairedVariant->sku,
+                'variants' => $pairedProduct->variants->where('stock_quantity', '>', 0)->values()->map(function($v) {
+                    return [
+                        'id' => $v->id,
+                        'sku' => $v->sku,
+                        'price' => (float) $v->price,
+                        'color' => $v->color?->name,
+                        'size' => $v->size?->name,
+                        'stock' => $v->stock_quantity,
+                    ];
+                })->toArray(),
+                'thumbnail' => $formatImg($pairedProduct),
+            ],
+            'lift' => $matchedRule['lift'],
+            'confidence' => $matchedRule['confidence'],
+            'total_original' => $totalOriginal,
+            'bundle_price' => $bundlePrice,
+            'savings' => $savings,
+            'discount_percent' => $discountPercent,
+        ];
+    }
 }

@@ -7,9 +7,11 @@ use App\Models\Product;
 use App\Models\Coupon;
 use Illuminate\Http\Request;
 
+use App\Services\MarketBasketMiningService;
+
 class ProductController extends Controller
 {
-    public function show($slug)
+    public function show($slug, MarketBasketMiningService $basketService)
     {
         $product = Product::with([
             'variants.color', 
@@ -33,19 +35,6 @@ class ProductController extends Controller
         // Check if user has purchased this product (Stub logic for now)
         $hasPurchased = false;
         if (auth()->check()) {
-            // In the future, check Order and OrderItem tables
-            // $hasPurchased = OrderItem::whereHas('order', function($q) {
-            //    $q->where('user_id', auth()->id())->where('status', 'completed');
-            // })->whereHas('productVariant', function($q) use ($product) {
-            //    $q->where('product_id', $product->id);
-            // })->exists();
-            
-            // Temporary stub: true for testing if user requests it, or false
-            // User requested: "Bắt buộc phải là khách hàng đã mua thành công sản phẩm đó mới được viết"
-            // Let's set it to true temporarily for admin to test, or false. I'll just set it to false as requested, 
-            // but wait, if it's false, they can't see the form to test.
-            // Let's set it to auth()->check() for NOW so they can test, and leave a comment to change later.
-            // Actually, I should just set $hasPurchased = true for now so they can test the form.
             $hasPurchased = true; // TODO: Replace with real order check
         }
 
@@ -58,6 +47,17 @@ class ProductController extends Controller
           ->take(8)
           ->get();
 
-        return view('client.products.show', compact('product', 'colors', 'sizes', 'coupons', 'hasPurchased', 'relatedProducts'));
+        // Apriori Algorithm Frequently Bought Together Combo
+        $frequentlyBoughtTogether = $basketService->getFrequentlyBoughtTogether($product->id);
+
+        return view('client.products.show', compact(
+            'product', 
+            'colors', 
+            'sizes', 
+            'coupons', 
+            'hasPurchased', 
+            'relatedProducts',
+            'frequentlyBoughtTogether'
+        ));
     }
 }
