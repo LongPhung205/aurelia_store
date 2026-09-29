@@ -181,30 +181,11 @@
                         </a>
                     </div>
 
-                    <!-- Theme Switcher Dropdown -->
-                    <button id="theme-toggle" type="button" data-dropdown-toggle="theme-dropdown" class="text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 focus:outline-none focus:ring-4 focus:ring-slate-200 dark:focus:ring-slate-700 rounded-lg p-2 mr-2 transition-colors">
-                        <i id="theme-toggle-icon" class="bi bi-circle-half text-lg"></i>
+                    <!-- Theme Switcher (1-Click Toggle Light/Dark) -->
+                    <button id="theme-toggle" type="button" class="text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 focus:outline-none focus:ring-4 focus:ring-slate-200 dark:focus:ring-slate-700 rounded-lg p-2 mr-2 transition-colors cursor-pointer" title="Chuyển chế độ Sáng / Tối">
+                        <i id="theme-toggle-dark-icon" class="bi bi-moon-stars-fill text-lg hidden"></i>
+                        <i id="theme-toggle-light-icon" class="bi bi-sun-fill text-lg text-amber-500 hidden"></i>
                     </button>
-                    <!-- Theme Dropdown menu -->
-                    <div id="theme-dropdown" class="z-50 hidden my-4 text-base list-none bg-white divide-y divide-gray-100 rounded-lg shadow-lg dark:bg-slate-700 dark:divide-slate-600 border border-slate-100 dark:border-slate-600">
-                        <ul class="py-2" aria-labelledby="theme-toggle">
-                            <li>
-                                <button type="button" data-theme-value="light" class="theme-btn w-full flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 dark:text-slate-200 dark:hover:text-white">
-                                    <i class="bi bi-sun-fill mr-2"></i>Sáng
-                                </button>
-                            </li>
-                            <li>
-                                <button type="button" data-theme-value="dark" class="theme-btn w-full flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 dark:text-slate-200 dark:hover:text-white">
-                                    <i class="bi bi-moon-stars-fill mr-2"></i>Tối
-                                </button>
-                            </li>
-                            <li>
-                                <button type="button" data-theme-value="system" class="theme-btn w-full flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 dark:text-slate-200 dark:hover:text-white">
-                                    <i class="bi bi-display mr-2"></i>Hệ thống
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
                 </div>
             </div>
         </div>
@@ -615,20 +596,61 @@
         });
     </script>
     
-    <!-- Theme Switcher Logic -->
+    <!-- Theme Switcher Logic (Instant 1-Click Toggle Light/Dark) -->
+    <script>
+        (function() {
+            function updateThemeUI(isDark) {
+                const darkIcon = document.getElementById('theme-toggle-dark-icon');
+                const lightIcon = document.getElementById('theme-toggle-light-icon');
+                const btn = document.getElementById('theme-toggle');
+
+                if (darkIcon && lightIcon) {
+                    if (isDark) {
+                        darkIcon.classList.add('hidden');
+                        lightIcon.classList.remove('hidden');
+                        if (btn) btn.title = 'Chuyển sang chế độ Sáng';
+                    } else {
+                        lightIcon.classList.add('hidden');
+                        darkIcon.classList.remove('hidden');
+                        if (btn) btn.title = 'Chuyển sang chế độ Tối';
+                    }
+                }
+            }
+
+            window.toggleTheme = function() {
+                const isCurrentlyDark = document.documentElement.classList.contains('dark');
+                const newTheme = isCurrentlyDark ? 'light' : 'dark';
+                localStorage.setItem('color-theme', newTheme);
+                document.documentElement.classList.toggle('dark', newTheme === 'dark');
+                updateThemeUI(newTheme === 'dark');
+            };
+
+            document.addEventListener('DOMContentLoaded', function() {
+                const currentTheme = localStorage.getItem('color-theme');
+                const isDark = currentTheme === 'dark' || (!currentTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.classList.toggle('dark', isDark);
+                updateThemeUI(isDark);
+
+                const btn = document.getElementById('theme-toggle');
+                if (btn) {
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        window.toggleTheme();
+                    });
+                }
+            });
+
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+                if (!localStorage.getItem('color-theme')) {
+                    document.documentElement.classList.toggle('dark', e.matches);
+                    updateThemeUI(e.matches);
+                }
+            });
+        })();
+    </script>
+    
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            window.setTheme = (t) => {
-                localStorage.setItem('color-theme', t);
-                let isDark = t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-                document.documentElement.classList.toggle('dark', isDark);
-                document.getElementById('theme-toggle-icon').className = t === 'light' ? 'bi bi-sun-fill text-lg' : (t === 'dark' ? 'bi bi-moon-stars-fill text-lg' : 'bi bi-display text-lg');
-            };
-            
-            setTheme(localStorage.getItem('color-theme') || 'system');
-            
-            document.querySelectorAll('.theme-btn').forEach(b => b.onclick = (e) => setTheme(e.currentTarget.dataset.themeValue));
-            window.matchMedia('(prefers-color-scheme: dark)').onchange = () => { if(localStorage.getItem('color-theme') === 'system') setTheme('system'); };
 
             // Sidebar dropdown accordion toggles
             document.querySelectorAll('[data-collapse-toggle]').forEach(button => {
