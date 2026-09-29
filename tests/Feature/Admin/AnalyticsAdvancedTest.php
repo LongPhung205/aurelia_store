@@ -108,4 +108,22 @@ class AnalyticsAdvancedTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee(route('admin.flash_sales.index'), false);
     }
+
+    public function test_rfm_tab_displays_lifetime_dataset_notice()
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $response = $this->actingAs($admin)->get('/admin/analytics?tab=rfm');
+        $response->assertStatus(200);
+        $response->assertSee('Lifetime Dataset', false);
+    }
+
+    public function test_basket_tab_displays_lifetime_dataset_notice()
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $response = $this->actingAs($admin)->get('/admin/analytics?tab=basket');
+        $response->assertStatus(200);
+        $response->assertSee('Lifetime Dataset', false);
+    }
 }

@@ -479,7 +479,12 @@
                         <i class="bi bi-people-fill text-2xl"></i>
                     </div>
                     <div>
-                        <h2 class="text-xl font-black text-slate-800 dark:text-white tracking-tight">Phân Khúc Khách Hàng Theo Mô Hình RFM</h2>
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-xl font-black text-slate-800 dark:text-white tracking-tight">Phân Khúc Khách Hàng Theo Mô Hình RFM</h2>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/80 text-[11px] font-bold">
+                                <i class="bi bi-database-check"></i> Lifetime Dataset
+                            </span>
+                        </div>
                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                             Chấm điểm tự động dựa trên <span class="font-bold text-slate-700 dark:text-slate-300">Recency</span> (Lần mua cuối), <span class="font-bold text-slate-700 dark:text-slate-300">Frequency</span> (Tần suất đơn), và <span class="font-bold text-slate-700 dark:text-slate-300">Monetary</span> (Tổng tiền chi tiêu).
                         </p>
@@ -489,11 +494,11 @@
                 <div class="flex items-center gap-3">
                     <div class="px-4 py-2 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-700 text-right">
                         <span class="text-[11px] uppercase font-semibold text-slate-400 block">Tổng khách phân tích</span>
-                        <span class="text-lg font-black text-slate-800 dark:text-white">{{ number_format($rfmData['total_customers'] ?? 0) }} người</span>
+                        <span class="text-lg font-black text-slate-800 dark:text-white tabular-nums">{{ number_format($rfmData['total_customers'] ?? 0) }} người</span>
                     </div>
                     <div class="px-4 py-2 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-700 text-right">
                         <span class="text-[11px] uppercase font-semibold text-slate-400 block">Doanh thu tích lũy</span>
-                        <span class="text-lg font-black text-indigo-600 dark:text-indigo-400">{{ number_format($rfmData['total_revenue'] ?? 0, 0, ',', '.') }} đ</span>
+                        <span class="text-lg font-black text-indigo-600 dark:text-indigo-400 tabular-nums">{{ number_format($rfmData['total_revenue'] ?? 0, 0, ',', '.') }} đ</span>
                     </div>
                 </div>
             </div>
@@ -690,7 +695,12 @@
                         <i class="bi bi-cart-check-fill text-2xl"></i>
                     </div>
                     <div>
-                        <h2 class="text-xl font-black text-slate-800 dark:text-white tracking-tight">Khai Phá Giỏ Hàng & Gợi Ý Mua Kèm (Apriori)</h2>
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-xl font-black text-slate-800 dark:text-white tracking-tight">Khai Phá Giỏ Hàng & Gợi Ý Mua Kèm (Apriori)</h2>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 text-[11px] font-bold">
+                                <i class="bi bi-database-check"></i> Lifetime Dataset
+                            </span>
+                        </div>
                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                             Phát hiện các mặt hàng thường được mua cùng nhau dựa trên 3 chỉ số thống kê: <span class="font-bold text-slate-700 dark:text-slate-300">Support</span> (Độ hỗ trợ), <span class="font-bold text-slate-700 dark:text-slate-300">Confidence</span> (Độ tin cậy) và <span class="font-bold text-slate-700 dark:text-slate-300">Lift</span> (Hệ số nâng).
                         </p>
@@ -700,11 +710,11 @@
                 <div class="flex items-center gap-3">
                     <div class="px-4 py-2 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-700 text-right">
                         <span class="text-[11px] uppercase font-semibold text-slate-400 block">Giỏ hàng đa sản phẩm</span>
-                        <span class="text-lg font-black text-slate-800 dark:text-white">{{ number_format($basketData['total_transactions'] ?? 0) }} giỏ</span>
+                        <span class="text-lg font-black text-slate-800 dark:text-white tabular-nums">{{ number_format($basketData['total_transactions'] ?? 0) }} giỏ</span>
                     </div>
                     <div class="px-4 py-2 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-700 text-right">
                         <span class="text-[11px] uppercase font-semibold text-slate-400 block">Luật kết hợp phát hiện</span>
-                        <span class="text-lg font-black text-emerald-600 dark:text-emerald-400">{{ count($basketData['rules'] ?? []) }} luật</span>
+                        <span class="text-lg font-black text-emerald-600 dark:text-emerald-400 tabular-nums">{{ count($basketData['rules'] ?? []) }} luật</span>
                     </div>
                 </div>
             </div>
@@ -798,9 +808,21 @@
                                 <th class="px-4 py-3 rounded-l-lg">Sản phẩm chính (A)</th>
                                 <th class="px-4 py-3">Sản phẩm mua kèm (B)</th>
                                 <th class="px-4 py-3 text-center">Mua chung</th>
-                                <th class="px-4 py-3 text-center">Độ hỗ trợ (Support)</th>
-                                <th class="px-4 py-3 text-center">Độ tin cậy (Confidence)</th>
-                                <th class="px-4 py-3 text-center">Hệ số nâng (Lift)</th>
+                                <th class="px-4 py-3 text-center" title="Độ hỗ trợ (Support): Tỷ lệ % đơn hàng chứa đồng thời cả hai sản phẩm A và B">
+                                    <span class="inline-flex items-center gap-1 cursor-help">
+                                        Support <i class="bi bi-info-circle text-[10px] text-slate-400"></i>
+                                    </span>
+                                </th>
+                                <th class="px-4 py-3 text-center" title="Độ tin cậy (Confidence): Xác suất khách mua sản phẩm A sẽ mua kèm thêm sản phẩm B">
+                                    <span class="inline-flex items-center gap-1 cursor-help">
+                                        Confidence <i class="bi bi-info-circle text-[10px] text-slate-400"></i>
+                                    </span>
+                                </th>
+                                <th class="px-4 py-3 text-center" title="Hệ số nâng (Lift): Mức độ tương quan thực tế. Lift > 1 chứng minh mua A làm tăng khả năng mua B so với ngẫu nhiên">
+                                    <span class="inline-flex items-center gap-1 cursor-help">
+                                        Lift <i class="bi bi-info-circle text-[10px] text-emerald-500"></i>
+                                    </span>
+                                </th>
                                 <th class="px-4 py-3 text-right rounded-r-lg">Hành động</th>
                             </tr>
                         </thead>
@@ -843,22 +865,22 @@
                                     </div>
                                 </td>
 
-                                <td class="px-4 py-3 text-center font-bold text-slate-800 dark:text-white">
+                                <td class="px-4 py-3 text-center font-bold text-slate-800 dark:text-white tabular-nums">
                                     {{ $rule['co_count'] }} đơn
                                 </td>
 
                                 <td class="px-4 py-3 text-center">
-                                    <span class="font-semibold text-slate-700 dark:text-slate-300">{{ $rule['support'] }}%</span>
+                                    <span class="font-semibold text-slate-700 dark:text-slate-300 tabular-nums">{{ $rule['support'] }}%</span>
                                 </td>
 
                                 <td class="px-4 py-3 text-center">
-                                    <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                                    <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 tabular-nums">
                                         {{ $rule['confidence'] }}%
                                     </span>
                                 </td>
 
                                 <td class="px-4 py-3 text-center">
-                                    <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+                                    <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 tabular-nums">
                                         {{ $rule['lift'] }}x
                                     </span>
                                 </td>
@@ -872,8 +894,14 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="7" class="px-4 py-8 text-center text-slate-400">
-                                    Chưa có đơn hàng nào chứa từ 2 sản phẩm trở lên để khai phá giỏ hàng.
+                                <td colspan="7" class="px-4 py-14 text-center">
+                                    <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-300 text-2xl">
+                                        <i class="bi bi-basket2"></i>
+                                    </div>
+                                    <h4 class="text-sm font-bold text-slate-700 dark:text-slate-200 mb-1">Chưa Đủ Dữ Liệu Giỏ Hàng Đa Sản Phẩm</h4>
+                                    <p class="text-xs text-slate-400 dark:text-slate-500 max-w-sm mx-auto">
+                                        Thuật toán Apriori yêu cầu các đơn hàng có từ 2 sản phẩm khác nhau trở lên để tính toán tương quan mua kèm.
+                                    </p>
                                 </td>
                             </tr>
                             @endforelse
