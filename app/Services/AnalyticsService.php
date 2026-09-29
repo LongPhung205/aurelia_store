@@ -93,6 +93,15 @@ class AnalyticsService
         $customerData = $this->getCustomerCohortStats($periods);
         $productRankings = $this->getTopAndSlowProducts($periods['current']);
 
+        $kpis['customers'] = [
+            'new_current' => $customerData['new_users_current'],
+            'new_previous' => $customerData['new_users_prev'],
+            'new_growth' => $customerData['new_users_growth'],
+            'returning_rate' => $customerData['returning_rate'],
+            'first_time_rate' => $customerData['first_time_rate'],
+        ];
+        $kpis['orders']['cancel_rate'] = $kpis['orders']['cancellation_rate'];
+
         return [
             'periods' => $periods,
             'kpis' => $kpis,

@@ -299,9 +299,9 @@
                     </li>
 
                     <li>
-                        <a href="#" class="flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-200 font-normal">
+                        <a href="{{ route('admin.analytics.index') }}" class="flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-200 group {{ request()->routeIs('admin.analytics.*') ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-200 font-normal' }}">
                             <div class="flex items-center gap-3 text-sm">
-                                <i class="bi bi-bar-chart text-base text-slate-400 dark:text-slate-500 group-hover:text-slate-500 dark:group-hover:text-slate-400"></i>
+                                <i class="bi bi-bar-chart text-base {{ request()->routeIs('admin.analytics.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-500 dark:group-hover:text-slate-400' }}"></i>
                                 <span>Analytics</span>
                             </div>
                         </a>

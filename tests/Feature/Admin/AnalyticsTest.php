@@ -59,4 +59,22 @@ class AnalyticsTest extends TestCase
         $this->assertEquals(500000, $data['kpis']['aov']['current']);
         $this->assertNotEmpty($data['trendChart']['labels']);
     }
+
+    public function test_analytics_handles_all_preset_ranges()
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $ranges = ['today', 'last_7_days', 'last_30_days', 'this_month', 'this_year'];
+
+        foreach ($ranges as $range) {
+            $response = $this->actingAs($admin)->get("/admin/analytics?range={$range}");
+            $response->assertStatus(200);
+            $response->assertViewHas('data');
+        }
+
+        // Test custom range
+        $response = $this->actingAs($admin)->get('/admin/analytics?range=custom&from_date=2026-09-01&to_date=2026-09-15');
+        $response->assertStatus(200);
+        $response->assertViewHas('data');
+    }
 }
