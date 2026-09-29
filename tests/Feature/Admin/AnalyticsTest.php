@@ -77,4 +77,18 @@ class AnalyticsTest extends TestCase
         $response->assertStatus(200);
         $response->assertViewHas('data');
     }
+
+    public function test_admin_can_export_analytics_csv()
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $response = $this->actingAs($admin)->get('/admin/analytics/export?range=last_7_days');
+        $response->assertStatus(200);
+        $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
+
+        $content = $response->streamedContent();
+        $this->assertStringStartsWith("\xEF\xBB\xBF", $content);
+        $this->assertStringContainsString('BÁO CÁO PHÂN TÍCH HOẠT ĐỘNG KINH DOANH', $content);
+        $this->assertStringContainsString('Doanh thu thuần', $content);
+    }
 }

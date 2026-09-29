@@ -28,6 +28,12 @@ class AnalyticsController extends Controller
 
     public function export(Request $request)
     {
-        return response()->json(['status' => 'ok']);
+        $range = $request->input('range', 'last_7_days');
+        $from = $request->input('from_date');
+        $to = $request->input('to_date');
+
+        $data = $this->analyticsService->getAnalyticsData($range, $from, $to);
+
+        return $this->analyticsService->streamCsvReport($data);
     }
 }

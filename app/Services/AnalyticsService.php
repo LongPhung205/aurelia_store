@@ -426,4 +426,67 @@ class AnalyticsService
             'slow' => $slowProducts,
         ];
     }
+
+    /**
+     * Streams an Excel-friendly CSV report with UTF-8 BOM encoding.
+     */
+    public function streamCsvReport(array $data): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $filename = 'bao_cao_analytics_aurelia_' . $data['periods']['current']['start']->format('Ymd') . '_' . $data['periods']['current']['end']->format('Ymd') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        return response()->stream(function () use ($data) {
+            $handle = fopen('php://output', 'w');
+            // Write UTF-8 Byte Order Mark (BOM)
+            fputs($handle, "\xEF\xBB\xBF");
+
+            // 1. Report Header
+            fputcsv($handle, ['AURELIA STORE - BÁO CÁO PHÂN TÍCH HOẠT ĐỘNG KINH DOANH']);
+            fputcsv($handle, ['Khoảng thời gian:', $data['periods']['current']['start']->format('d/m/Y') . ' - ' . $data['periods']['current']['end']->format('d/m/Y')]);
+            fputcsv($handle, ['Kỳ so sánh liền trước:', $data['periods']['previous']['start']->format('d/m/Y') . ' - ' . $data['periods']['previous']['end']->format('d/m/Y')]);
+            fputcsv($handle, ['Thời điểm xuất:', now()->format('d/m/Y H:i:s')]);
+            fputcsv($handle, []);
+
+            // 2. KPIs Summary
+            fputcsv($handle, ['=== 1. TỔNG HỢP CHỈ SỐ KINH DOANH (KPIs) ===']);
+            fputcsv($handle, ['Chỉ số', 'Kỳ hiện tại', 'Kỳ trước', 'Tăng trưởng (%)']);
+            fputcsv($handle, ['Doanh thu thuần (VNĐ)', $data['kpis']['revenue']['current'], $data['kpis']['revenue']['previous'], $data['kpis']['revenue']['growth'] . '%']);
+            fputcsv($handle, ['Số đơn hoàn tất', $data['kpis']['orders']['current'], $data['kpis']['orders']['previous'], $data['kpis']['orders']['growth'] . '%']);
+            fputcsv($handle, ['Giá trị đơn trung bình (AOV)', $data['kpis']['aov']['current'], $data['kpis']['aov']['previous'], $data['kpis']['aov']['growth'] . '%']);
+            fputcsv($handle, ['Khách hàng mới', $data['kpis']['customers']['new_current'], $data['kpis']['customers']['new_previous'], $data['kpis']['customers']['new_growth'] . '%']);
+            fputcsv($handle, []);
+
+            // 3. Daily Breakdown
+            fputcsv($handle, ['=== 2. CHI TIẾT DOANH THU THEO NGÀY ===']);
+            fputcsv($handle, ['Ngày', 'Doanh thu (VNĐ)', 'Số đơn']);
+            foreach ($data['trendChart']['labels'] as $idx => $label) {
+                fputcsv($handle, [$label, $data['trendChart']['revenue'][$idx] ?? 0, $data['trendChart']['orders'][$idx] ?? 0]);
+            }
+            fputcsv($handle, []);
+
+            // 4. Top 10 Products
+            fputcsv($handle, ['=== 3. TOP 10 SẢN PHẨM BÁN CHẠY ===']);
+            fputcsv($handle, ['Mã SP', 'Tên sản phẩm', 'Danh mục', 'Số lượng bán', 'Doanh thu đóng góp (VNĐ)', 'Tồn kho']);
+            foreach ($data['topProducts'] as $prod) {
+                fputcsv($handle, [$prod->sku ?? 'N/A', $prod->name, $prod->category_name ?? 'N/A', $prod->total_sold, $prod->total_revenue, $prod->total_stock]);
+            }
+            fputcsv($handle, []);
+
+            // 5. Slow Moving Products
+            fputcsv($handle, ['=== 4. SẢN PHẨM TỒN KHO CHẬM BÁN ===']);
+            fputcsv($handle, ['Mã SP', 'Tên sản phẩm', 'Danh mục', 'Tồn kho hiện tại', 'Đã bán trong kỳ']);
+            foreach ($data['slowProducts'] as $slow) {
+                fputcsv($handle, [$slow->sku ?? 'N/A', $slow->name, $slow->category_name ?? 'N/A', $slow->total_stock, $slow->sold_in_period]);
+            }
+
+            fclose($handle);
+        }, 200, $headers);
+    }
 }
