@@ -268,8 +268,14 @@
                                 </td>
                                 <td class="px-4 py-3">
                                     <div class="flex items-center gap-3">
-                                        @if($prod->thumbnail)
-                                            <img src="{{ $prod->thumbnail }}" alt="{{ $prod->name }}" class="w-10 h-10 rounded-lg object-cover border border-slate-200 dark:border-slate-700 shrink-0">
+                                        @php
+                                            $topImg = $prod->thumbnail;
+                                            if ($topImg && !str_starts_with($topImg, 'http://') && !str_starts_with($topImg, 'https://')) {
+                                                $topImg = asset('storage/' . ltrim($topImg, '/'));
+                                            }
+                                        @endphp
+                                        @if($topImg)
+                                            <img src="{{ $topImg }}" alt="{{ $prod->name }}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400 shrink-0\'><i class=\'bi bi-image text-lg\'></i></div>';" class="w-10 h-10 rounded-lg object-cover border border-slate-200 dark:border-slate-700 shrink-0">
                                         @else
                                             <div class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400 shrink-0">
                                                 <i class="bi bi-image text-lg"></i>
@@ -336,8 +342,14 @@
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
                                 <td class="px-4 py-3">
                                     <div class="flex items-center gap-3">
-                                        @if($slow->primary_image_url)
-                                            <img src="{{ $slow->primary_image_url }}" alt="{{ $slow->name }}" class="w-10 h-10 rounded-lg object-cover border border-slate-200 dark:border-slate-700 shrink-0">
+                                        @php
+                                            $slowImg = $slow->thumbnail ?? $slow->primary_image_url;
+                                            if ($slowImg && !str_starts_with($slowImg, 'http://') && !str_starts_with($slowImg, 'https://')) {
+                                                $slowImg = asset('storage/' . ltrim($slowImg, '/'));
+                                            }
+                                        @endphp
+                                        @if($slowImg)
+                                            <img src="{{ $slowImg }}" alt="{{ $slow->name }}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400 shrink-0\'><i class=\'bi bi-image text-lg\'></i></div>';" class="w-10 h-10 rounded-lg object-cover border border-slate-200 dark:border-slate-700 shrink-0">
                                         @else
                                             <div class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400 shrink-0">
                                                 <i class="bi bi-image text-lg"></i>

@@ -385,7 +385,14 @@ class AnalyticsService
 
         foreach ($topItems as $item) {
             $product = Product::with(['variants', 'images'])->find($item->id);
-            $item->thumbnail = $product ? $product->primary_image_url : null;
+            $rawImg = $product ? $product->primary_image_url : null;
+            if ($rawImg) {
+                $item->thumbnail = (str_starts_with($rawImg, 'http://') || str_starts_with($rawImg, 'https://'))
+                    ? $rawImg
+                    : asset('storage/' . ltrim($rawImg, '/'));
+            } else {
+                $item->thumbnail = null;
+            }
             $item->total_stock = $product ? $product->variants->sum('stock_quantity') : 0;
             $item->sku = $product && $product->variants->first() ? $product->variants->first()->sku : 'SP-' . $item->id;
         }
@@ -421,6 +428,14 @@ class AnalyticsService
             ->values();
 
         foreach ($slowProducts as $p) {
+            $rawImg = $p->primary_image_url;
+            if ($rawImg) {
+                $p->thumbnail = (str_starts_with($rawImg, 'http://') || str_starts_with($rawImg, 'https://'))
+                    ? $rawImg
+                    : asset('storage/' . ltrim($rawImg, '/'));
+            } else {
+                $p->thumbnail = null;
+            }
             $p->sold_in_period = (int) ($soldCounts[$p->id] ?? 0);
             $p->total_stock = $p->variants->sum('stock_quantity');
             $p->sku = $p->variants->first() ? $p->variants->first()->sku : 'SP-' . $p->id;
