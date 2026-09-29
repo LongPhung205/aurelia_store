@@ -404,7 +404,7 @@
                                         {{ $slow->sold_in_period }} cái
                                     </td>
                                     <td class="px-4 py-3 text-center">
-                                        <a href="{{ route('admin.flash-sales.index') }}" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300 border border-rose-200 dark:border-rose-800 hover:bg-rose-100 transition-colors">
+                                        <a href="{{ route('admin.flash_sales.index') }}" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300 border border-rose-200 dark:border-rose-800 hover:bg-rose-100 transition-colors">
                                             <i class="bi bi-lightning-charge"></i> Giảm giá / Flash Sale
                                         </a>
                                     </td>
@@ -772,7 +772,7 @@
                         </div>
 
                         <!-- CTA Button -->
-                        <a href="{{ route('admin.flash-sales.index') }}" class="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold text-center transition-colors flex items-center justify-center gap-1.5 shadow-sm">
+                        <a href="{{ route('admin.flash_sales.index') }}" class="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold text-center transition-colors flex items-center justify-center gap-1.5 shadow-sm">
                             <i class="bi bi-plus-circle"></i>
                             <span>Tạo Khuyến Mãi Combo</span>
                         </a>
@@ -864,7 +864,7 @@
                                 </td>
 
                                 <td class="px-4 py-3 text-right">
-                                    <a href="{{ route('admin.flash-sales.index') }}" class="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-lg text-xs font-bold hover:bg-emerald-100 transition-colors">
+                                    <a href="{{ route('admin.flash_sales.index') }}" class="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-lg text-xs font-bold hover:bg-emerald-100 transition-colors">
                                         <i class="bi bi-plus-circle"></i>
                                         <span>Tạo Combo</span>
                                     </a>
