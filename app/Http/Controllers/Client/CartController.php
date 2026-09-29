@@ -8,6 +8,7 @@ use App\Http\Requests\Client\UpdateCartItemRequest;
 use App\Http\Requests\Client\RemoveCartItemRequest;
 use App\Models\Product;
 use App\Services\CartService;
+use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
@@ -48,6 +49,29 @@ class CartController extends Controller
         $result = $this->cartService->addItem($validated['variant_id'], $validated['quantity']);
 
         return response()->json($result);
+    }
+
+    public function addCombo(Request $request)
+    {
+        $items = $request->input('items', []);
+        if (empty($items)) {
+            return response()->json(['success' => false, 'message' => 'Không có sản phẩm nào được chọn.'], 400);
+        }
+
+        $lastResult = null;
+        foreach ($items as $item) {
+            $variantId = (int) ($item['variant_id'] ?? 0);
+            $qty = max(1, (int) ($item['quantity'] ?? 1));
+            if ($variantId > 0) {
+                $lastResult = $this->cartService->addItem($variantId, $qty);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã thêm combo sản phẩm vào giỏ hàng thành công!',
+            'cart_quantity' => $lastResult['cart_quantity'] ?? 0,
+        ]);
     }
 
     public function update(UpdateCartItemRequest $request)

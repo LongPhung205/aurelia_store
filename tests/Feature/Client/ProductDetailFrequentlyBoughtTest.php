@@ -81,4 +81,39 @@ class ProductDetailFrequentlyBoughtTest extends TestCase
         $this->assertGreaterThan(0, $fbt['bundle_price']);
         $this->assertGreaterThan(0, $fbt['savings']);
     }
+
+    public function test_cart_add_combo_endpoint_adds_multiple_variants_atomically()
+    {
+        $category = Category::create(['name' => 'Thời Trang', 'slug' => 'thoi-trang']);
+
+        $p1 = Product::create([
+            'name' => 'Áo Sơ Mi Silk',
+            'slug' => 'ao-so-mi-silk',
+            'base_price' => 350000,
+            'status' => 'active',
+        ]);
+        $v1 = ProductVariant::create(['product_id' => $p1->id, 'sku' => 'SMS-01', 'price' => 350000, 'stock_quantity' => 20]);
+
+        $p2 = Product::create([
+            'name' => 'Chân Váy Chữ A',
+            'slug' => 'chan-vay-chu-a',
+            'base_price' => 280000,
+            'status' => 'active',
+        ]);
+        $v2 = ProductVariant::create(['product_id' => $p2->id, 'sku' => 'CVA-01', 'price' => 280000, 'stock_quantity' => 15]);
+
+        $response = $this->postJson(route('cart.add-combo'), [
+            'items' => [
+                ['variant_id' => $v1->id, 'quantity' => 1],
+                ['variant_id' => $v2->id, 'quantity' => 1],
+            ],
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+            ]);
+
+        $this->assertEquals(2, $response->json('cart_quantity'));
+    }
 }

@@ -421,6 +421,212 @@
     </div>
 </div>
 
+<!-- Frequently Bought Together (Apriori AI Smart Bundle) -->
+@if(!empty($frequentlyBoughtTogether))
+<div class="mb-16" x-data="frequentlyBoughtTogetherWidget()">
+    <div class="bg-gradient-to-br from-rose-50/50 via-white to-pink-50/30 dark:from-slate-800/90 dark:via-slate-800 dark:to-slate-800 border border-rose-200/70 dark:border-slate-700 rounded-3xl p-6 md:p-8 shadow-xs">
+        
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-5 border-b border-rose-100 dark:border-slate-700/60">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300">
+                        <i class="bi bi-stars text-sm"></i> Gợi Ý Phối Đồ Thông Minh
+                    </span>
+                    <span class="text-xs font-semibold text-slate-400">Được mua cùng nhiều nhất</span>
+                </div>
+                <h3 class="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                    Thường Được Mua Cùng Nhau
+                </h3>
+            </div>
+            <div class="text-xs text-rose-600 dark:text-rose-400 font-bold bg-white dark:bg-slate-700 px-3.5 py-1.5 rounded-full border border-rose-200 dark:border-slate-600 shadow-xs w-fit">
+                <i class="bi bi-tag-fill mr-1"></i> Ưu đãi Combo -{{ $frequentlyBoughtTogether['discount_percent'] }}%
+            </div>
+        </div>
+
+        <!-- Combo Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            
+            <!-- Products Pairing (lg:col-span-8) -->
+            <div class="lg:col-span-8 flex flex-col sm:flex-row items-center justify-start gap-4 md:gap-6">
+                
+                <!-- Product 1: Current Item -->
+                <div class="flex items-center gap-3.5 p-3 rounded-2xl bg-white dark:bg-slate-700/40 border border-slate-200/80 dark:border-slate-700 w-full sm:w-1/2">
+                    <div class="w-16 h-20 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-100 dark:border-slate-700">
+                        @if($frequentlyBoughtTogether['main_product']['thumbnail'])
+                            <img src="{{ $frequentlyBoughtTogether['main_product']['thumbnail'] }}" alt="{{ $frequentlyBoughtTogether['main_product']['name'] }}" class="w-full h-full object-cover">
+                        @else
+                            <div class="w-full h-full flex items-center justify-center text-slate-400"><i class="bi bi-image"></i></div>
+                        @endif
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400 block mb-0.5">Sản phẩm đang xem</span>
+                        <h4 class="font-bold text-xs md:text-sm text-slate-800 dark:text-white line-clamp-2 mb-1">
+                            {{ $frequentlyBoughtTogether['main_product']['name'] }}
+                        </h4>
+                        <div class="text-sm font-black text-slate-900 dark:text-white tabular-nums">
+                            {{ number_format($frequentlyBoughtTogether['main_product']['price'], 0, ',', '.') }} đ
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Plus Icon Connector -->
+                <div class="w-9 h-9 rounded-full bg-rose-500 text-white flex items-center justify-center text-base font-black shadow-sm shrink-0">
+                    <i class="bi bi-plus-lg"></i>
+                </div>
+
+                <!-- Product 2: Paired Recommended Item -->
+                <div class="flex items-center gap-3.5 p-3 rounded-2xl bg-white dark:bg-slate-700/40 border border-rose-200/80 dark:border-slate-700 w-full sm:w-1/2 relative">
+                    <div class="w-16 h-20 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-100 dark:border-slate-700">
+                        @if($frequentlyBoughtTogether['paired_product']['thumbnail'])
+                            <img src="{{ $frequentlyBoughtTogether['paired_product']['thumbnail'] }}" alt="{{ $frequentlyBoughtTogether['paired_product']['name'] }}" class="w-full h-full object-cover">
+                        @else
+                            <div class="w-full h-full flex items-center justify-center text-slate-400"><i class="bi bi-image"></i></div>
+                        @endif
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center justify-between mb-0.5">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Gợi ý mua kèm</span>
+                            <label class="inline-flex items-center cursor-pointer">
+                                <input type="checkbox" x-model="includePaired" class="w-4 h-4 rounded text-rose-600 border-slate-300 focus:ring-rose-500">
+                            </label>
+                        </div>
+                        <a href="{{ route('products.show', $frequentlyBoughtTogether['paired_product']['slug']) }}" class="font-bold text-xs md:text-sm text-slate-800 dark:text-white hover:text-rose-600 transition-colors line-clamp-1 block mb-1">
+                            {{ $frequentlyBoughtTogether['paired_product']['name'] }}
+                        </a>
+                        
+                        <!-- Variant selection if multiple variants exist -->
+                        @if(count($frequentlyBoughtTogether['paired_product']['variants']) > 1)
+                        <select x-model="selectedPairedVariantId" class="text-[11px] py-1 px-2 mb-1 w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 focus:ring-1 focus:ring-rose-500">
+                            @foreach($frequentlyBoughtTogether['paired_product']['variants'] as $pVar)
+                                <option value="{{ $pVar['id'] }}">
+                                    {{ $pVar['size'] ?: '' }} {{ $pVar['color'] ? '- ' . $pVar['color'] : '' }} ({{ number_format($pVar['price'], 0, ',', '.') }}đ)
+                                </option>
+                            @endforeach
+                        </select>
+                        @endif
+
+                        <div class="text-sm font-black text-rose-600 dark:text-rose-400 tabular-nums">
+                            {{ number_format($frequentlyBoughtTogether['paired_product']['price'], 0, ',', '.') }} đ
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Pricing & Action Box (lg:col-span-4) -->
+            <div class="lg:col-span-4 p-5 rounded-2xl bg-white dark:bg-slate-700/60 border border-slate-200/80 dark:border-slate-700 shadow-xs flex flex-col justify-between">
+                <div class="space-y-2 mb-4">
+                    <div class="flex items-center justify-between text-xs text-slate-400">
+                        <span>Giá gốc 2 sản phẩm:</span>
+                        <span class="line-through tabular-nums" x-text="includePaired ? '{{ number_format($frequentlyBoughtTogether['total_original'], 0, ',', '.') }} đ' : '{{ number_format($frequentlyBoughtTogether['main_product']['price'], 0, ',', '.') }} đ'"></span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-700 dark:text-slate-200">Tổng giá Combo:</span>
+                        <span class="text-xl md:text-2xl font-black text-rose-600 dark:text-rose-400 tabular-nums" x-text="includePaired ? '{{ number_format($frequentlyBoughtTogether['bundle_price'], 0, ',', '.') }} đ' : '{{ number_format($frequentlyBoughtTogether['main_product']['price'], 0, ',', '.') }} đ'"></span>
+                    </div>
+                    <template x-if="includePaired">
+                        <div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs font-bold w-full justify-center">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>Tiết kiệm {{ number_format($frequentlyBoughtTogether['savings'], 0, ',', '.') }} đ khi mua combo</span>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- CTA Button -->
+                <button type="button"
+                        @click="addComboToCart()"
+                        :disabled="isAdding"
+                        class="w-full py-3.5 px-4 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 disabled:opacity-50 text-white rounded-xl text-xs md:text-sm font-black uppercase tracking-wider transition-all shadow-md shadow-rose-200 dark:shadow-none flex items-center justify-center gap-2">
+                    <template x-if="isAdding">
+                        <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                        </svg>
+                    </template>
+                    <i class="bi bi-bag-plus text-base" x-show="!isAdding"></i>
+                    <span x-text="includePaired ? 'Thêm Cả 2 Vào Giỏ Hàng' : 'Thêm Sản Phẩm Này'"></span>
+                </button>
+
+                <!-- Feedback Toast -->
+                <div x-show="addedSuccess"
+                     x-transition
+                     class="mt-2 text-center text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                    <i class="bi bi-check2-circle"></i> Đã thêm vào giỏ hàng thành công!
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+function frequentlyBoughtTogetherWidget() {
+    return {
+        includePaired: true,
+        selectedPairedVariantId: '{{ $frequentlyBoughtTogether['paired_product']['variant_id'] }}',
+        isAdding: false,
+        addedSuccess: false,
+
+        addComboToCart() {
+            // Get active variant id from current product page scope if available
+            let mainVarId = '{{ $frequentlyBoughtTogether['main_product']['variant_id'] }}';
+            if (window.__productDetails && window.__productDetails.activeVariantId) {
+                mainVarId = window.__productDetails.activeVariantId;
+            }
+
+            const items = [{
+                variant_id: parseInt(mainVarId),
+                quantity: 1
+            }];
+
+            if (this.includePaired) {
+                items.push({
+                    variant_id: parseInt(this.selectedPairedVariantId),
+                    quantity: 1
+                });
+            }
+
+            this.isAdding = true;
+            this.addedSuccess = false;
+
+            fetch('{{ route('cart.add-combo') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ items: items })
+            })
+            .then(res => res.json())
+            .then(data => {
+                this.isAdding = false;
+                if (data.success) {
+                    this.addedSuccess = true;
+                    // Update header cart badge
+                    const badge = document.getElementById('header-cart-badge');
+                    if (badge && data.cart_quantity !== undefined) {
+                        badge.textContent = data.cart_quantity;
+                    }
+                    setTimeout(() => {
+                        this.addedSuccess = false;
+                    }, 4000);
+                } else {
+                    alert(data.message || 'Không thể thêm sản phẩm vào giỏ hàng');
+                }
+            })
+            .catch(err => {
+                this.isAdding = false;
+                console.error(err);
+                alert('Có lỗi xảy ra khi thêm vào giỏ hàng.');
+            });
+        }
+    };
+}
+</script>
+@endif
+
 <!-- Related Products -->
 @if($relatedProducts->count() > 0)
 <div class="mb-16">

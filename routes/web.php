@@ -16,6 +16,7 @@ Route::get('/', [Client\HomeController::class, 'index'])->name('home');
 Route::prefix('cart')->name('cart.')->group(function () {
     Route::get('/', [Client\CartController::class, 'index'])->name('index');
     Route::post('/add', [Client\CartController::class, 'add'])->name('add');
+    Route::post('/add-combo', [Client\CartController::class, 'addCombo'])->name('add-combo');
     Route::put('/update', [Client\CartController::class, 'update'])->name('update');
     Route::delete('/remove', [Client\CartController::class, 'remove'])->name('remove');
 });

@@ -12,17 +12,25 @@ use Illuminate\Support\Str;
 
 class CartService
 {
+    protected ?string $guestToken = null;
+
     /**
      * Lấy guest_token từ cookie hoặc tạo mới.
      */
     public function getGuestToken(): string
     {
+        if ($this->guestToken) {
+            return $this->guestToken;
+        }
+
         $token = Cookie::get('guest_token');
         if (!$token) {
             $token = (string) Str::uuid();
             Cookie::queue('guest_token', $token, 60 * 24 * 30); // 30 ngày
         }
-        return $token;
+
+        $this->guestToken = $token;
+        return $this->guestToken;
     }
 
     /**
@@ -30,6 +38,7 @@ class CartService
      */
     public function forgetGuestToken(): void
     {
+        $this->guestToken = null;
         Cookie::queue(Cookie::forget('guest_token'));
     }
 
