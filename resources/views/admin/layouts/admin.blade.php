@@ -9,10 +9,15 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <!-- Bootstrap Icons -->
     <link href="{{ asset('vendor/bootstrap-icons/font/bootstrap-icons.css') }}" rel="stylesheet">
-    <!-- Google Fonts -->
+    <!-- Google Material Symbols & Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6; /* Tailwind gray-100 */
@@ -324,26 +329,26 @@
 
                 <!-- Product Management Section -->
                 <div class="mt-6">
-                    <button type="button" class="flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-slate-800 dark:text-slate-200 transition-colors group" aria-controls="dropdown-products" data-collapse-toggle="dropdown-products">
+                    <button type="button" class="flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-slate-800 dark:text-slate-200 transition-colors group cursor-pointer" aria-controls="dropdown-products" data-collapse-toggle="dropdown-products">
                         <span>Product Management</span>
-                        <i class="bi bi-chevron-down text-[10px] text-slate-400 transition-transform duration-200 group-data-[collapse-open]:rotate-180"></i>
+                        <i class="bi bi-chevron-down text-[10px] text-slate-400 transition-transform duration-200 {{ request()->routeIs('admin.products.*') || request()->routeIs('admin.categories.*') || request()->routeIs('admin.attributes.*') || request()->routeIs('admin.colors.*') || request()->routeIs('admin.sizes.*') || request()->routeIs('admin.materials.*') ? 'rotate-180' : 'group-data-[collapse-open]:rotate-180' }}"></i>
                     </button>
-                    <ul id="dropdown-products" class="{{ request()->routeIs('products.*') || request()->routeIs('categories.*') || request()->routeIs('attributes.*') || request()->routeIs('colors.*') || request()->routeIs('sizes.*') || request()->routeIs('materials.*') ? '' : 'hidden' }} space-y-1 py-1 mt-1">
+                    <ul id="dropdown-products" class="{{ request()->routeIs('admin.products.*') || request()->routeIs('admin.categories.*') || request()->routeIs('admin.attributes.*') || request()->routeIs('admin.colors.*') || request()->routeIs('admin.sizes.*') || request()->routeIs('admin.materials.*') ? '' : 'hidden' }} space-y-1 py-1 mt-1">
                         <li>
-                            <a href="{{ route('admin.products.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('products.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
-                                <i class="bi bi-box-seam text-base {{ request()->routeIs('products.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                            <a href="{{ route('admin.products.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('admin.products.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                                <i class="bi bi-box-seam text-base {{ request()->routeIs('admin.products.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
                                 <span>Products</span>
                             </a>
                         </li>
                         <li>
-                            <a href="{{ route('admin.categories.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('categories.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
-                                <i class="bi bi-folder2 text-base {{ request()->routeIs('categories.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                            <a href="{{ route('admin.categories.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('admin.categories.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                                <i class="bi bi-folder2 text-base {{ request()->routeIs('admin.categories.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
                                 <span>Categories</span>
                             </a>
                         </li>
                         <li>
-                            <a href="{{ route('admin.attributes.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('attributes.*') || request()->routeIs('colors.*') || request()->routeIs('sizes.*') || request()->routeIs('materials.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
-                                <i class="bi bi-tags text-base {{ request()->routeIs('attributes.*') || request()->routeIs('colors.*') || request()->routeIs('sizes.*') || request()->routeIs('materials.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                            <a href="{{ route('admin.attributes.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('admin.attributes.*') || request()->routeIs('admin.colors.*') || request()->routeIs('admin.sizes.*') || request()->routeIs('admin.materials.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                                <i class="bi bi-tags text-base {{ request()->routeIs('admin.attributes.*') || request()->routeIs('admin.colors.*') || request()->routeIs('admin.sizes.*') || request()->routeIs('admin.materials.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
                                 <span>Attributes</span>
                             </a>
                         </li>
@@ -352,26 +357,26 @@
 
                 <!-- Warehouse Section -->
                 <div class="mt-4">
-                    <button type="button" class="flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-slate-800 dark:text-slate-200 transition-colors group" aria-controls="dropdown-warehouse" data-collapse-toggle="dropdown-warehouse">
+                    <button type="button" class="flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-slate-800 dark:text-slate-200 transition-colors group cursor-pointer" aria-controls="dropdown-warehouse" data-collapse-toggle="dropdown-warehouse">
                         <span>Warehouse & Inventory</span>
-                        <i class="bi bi-chevron-down text-[10px] text-slate-400 transition-transform duration-200 {{ request()->routeIs('suppliers.*') || request()->routeIs('imports.*') || request()->routeIs('inventory.*') || request()->routeIs('inventory_history.*') ? 'rotate-180' : 'group-data-[collapse-open]:rotate-180' }}"></i>
+                        <i class="bi bi-chevron-down text-[10px] text-slate-400 transition-transform duration-200 {{ request()->routeIs('admin.imports.*') || request()->routeIs('admin.inventory.*') || request()->routeIs('admin.inventory_history.*') ? 'rotate-180' : 'group-data-[collapse-open]:rotate-180' }}"></i>
                     </button>
-                    <ul id="dropdown-warehouse" class="{{ request()->routeIs('imports.*') || request()->routeIs('inventory.*') || request()->routeIs('inventory_history.*') ? '' : 'hidden' }} space-y-1 py-1 mt-1">
+                    <ul id="dropdown-warehouse" class="{{ request()->routeIs('admin.imports.*') || request()->routeIs('admin.inventory.*') || request()->routeIs('admin.inventory_history.*') ? '' : 'hidden' }} space-y-1 py-1 mt-1">
                         <li>
-                            <a href="{{ route('admin.imports.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('imports.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
-                                <i class="bi bi-box-arrow-in-down text-base {{ request()->routeIs('imports.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                            <a href="{{ route('admin.imports.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('admin.imports.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                                <i class="bi bi-box-arrow-in-down text-base {{ request()->routeIs('admin.imports.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
                                 <span>Nhập kho</span>
                             </a>
                         </li>
                         <li>
-                            <a href="{{ route('admin.inventory.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('inventory.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
-                                <i class="bi bi-boxes text-base {{ request()->routeIs('inventory.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                            <a href="{{ route('admin.inventory.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('admin.inventory.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                                <i class="bi bi-boxes text-base {{ request()->routeIs('admin.inventory.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
                                 <span>Tồn kho (Stock)</span>
                             </a>
                         </li>
                         <li>
-                            <a href="{{ route('admin.inventory_history.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('inventory_history.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
-                                <i class="bi bi-clock-history text-base {{ request()->routeIs('inventory_history.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                            <a href="{{ route('admin.inventory_history.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('admin.inventory_history.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                                <i class="bi bi-clock-history text-base {{ request()->routeIs('admin.inventory_history.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
                                 <span>Thẻ kho</span>
                             </a>
                         </li>
@@ -380,15 +385,15 @@
 
                 <!-- Orders Section -->
                 <div class="mt-4">
-                    <button type="button" class="flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-slate-800 dark:text-slate-200 transition-colors group" aria-controls="dropdown-orders" data-collapse-toggle="dropdown-orders">
+                    <button type="button" class="flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-slate-800 dark:text-slate-200 transition-colors group cursor-pointer" aria-controls="dropdown-orders" data-collapse-toggle="dropdown-orders">
                         <span>Orders & Fulfillment</span>
-                        <i class="bi bi-chevron-down text-[10px] text-slate-400 transition-transform duration-200"></i>
+                        <i class="bi bi-chevron-down text-[10px] text-slate-400 transition-transform duration-200 {{ request()->routeIs('admin.orders.*') ? 'rotate-180' : '' }}"></i>
                     </button>
-                    <ul id="dropdown-orders" class="{{ request()->routeIs('orders.*') ? '' : 'hidden' }} space-y-1 py-1 mt-1">
+                    <ul id="dropdown-orders" class="{{ request()->routeIs('admin.orders.*') ? '' : 'hidden' }} space-y-1 py-1 mt-1">
                         <li>
-                            <a href="{{ route('admin.orders.index') }}" class="flex items-center justify-between px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('orders.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                            <a href="{{ route('admin.orders.index') }}" class="flex items-center justify-between px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('admin.orders.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
                                 <div class="flex items-center gap-3">
-                                    <i class="bi bi-cart3 text-base {{ request()->routeIs('orders.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                                    <i class="bi bi-cart3 text-base {{ request()->routeIs('admin.orders.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
                                     <span>Danh sách Đơn hàng</span>
                                 </div>
                             </a>
@@ -404,35 +409,57 @@
                         </li>
                     </ul>
                 </div>
+
+                <!-- Finance Section -->
+                <div class="mt-4">
+                    <button type="button" class="flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-slate-800 dark:text-slate-200 transition-colors group cursor-pointer" aria-controls="dropdown-finance" data-collapse-toggle="dropdown-finance">
+                        <span>Tài chính & Dòng tiền</span>
+                        <i class="bi bi-chevron-down text-[10px] text-slate-400 transition-transform duration-200 {{ request()->routeIs('admin.finance.*') || request()->routeIs('admin.transactions.*') ? 'rotate-180' : 'group-data-[collapse-open]:rotate-180' }}"></i>
+                    </button>
+                    <ul id="dropdown-finance" class="{{ request()->routeIs('admin.finance.*') || request()->routeIs('admin.transactions.*') ? '' : 'hidden' }} space-y-1 py-1 mt-1">
+                        <li>
+                            <a href="{{ route('admin.finance.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('admin.finance.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                                <i class="bi bi-bar-chart-line text-base {{ request()->routeIs('admin.finance.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                                <span>Thống kê tài chính</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.transactions.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('admin.transactions.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                                <i class="bi bi-credit-card text-base {{ request()->routeIs('admin.transactions.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                                <span>Danh sách giao dịch</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
                 <!-- Marketing Section -->
                 <div class="mt-4">
-                    <button type="button" class="flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-slate-800 dark:text-slate-200 transition-colors group" aria-controls="dropdown-marketing" data-collapse-toggle="dropdown-marketing">
+                    <button type="button" class="flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-slate-800 dark:text-slate-200 transition-colors group cursor-pointer" aria-controls="dropdown-marketing" data-collapse-toggle="dropdown-marketing">
                         <span>Marketing & Khuyến mãi</span>
-                        <i class="bi bi-chevron-down text-[10px] text-slate-400 transition-transform duration-200 {{ request()->routeIs('coupons.*') || request()->routeIs('flash_sales.*') || request()->routeIs('banners.*') || request()->routeIs('posts.*') ? 'rotate-180' : 'group-data-[collapse-open]:rotate-180' }}"></i>
+                        <i class="bi bi-chevron-down text-[10px] text-slate-400 transition-transform duration-200 {{ request()->routeIs('admin.coupons.*') || request()->routeIs('admin.flash_sales.*') || request()->routeIs('admin.banners.*') || request()->routeIs('admin.posts.*') ? 'rotate-180' : 'group-data-[collapse-open]:rotate-180' }}"></i>
                     </button>
-                    <ul id="dropdown-marketing" class="{{ request()->routeIs('coupons.*') || request()->routeIs('flash_sales.*') || request()->routeIs('banners.*') || request()->routeIs('posts.*') ? '' : 'hidden' }} space-y-1 py-1 mt-1">
+                    <ul id="dropdown-marketing" class="{{ request()->routeIs('admin.coupons.*') || request()->routeIs('admin.flash_sales.*') || request()->routeIs('admin.banners.*') || request()->routeIs('admin.posts.*') ? '' : 'hidden' }} space-y-1 py-1 mt-1">
                         <li>
-                            <a href="{{ route('admin.banners.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('banners.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
-                                <i class="bi bi-image text-base {{ request()->routeIs('banners.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                            <a href="{{ route('admin.banners.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('admin.banners.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                                <i class="bi bi-image text-base {{ request()->routeIs('admin.banners.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
                                 <span>Banner Trang Chủ</span>
                             </a>
                         </li>
                         <li>
-                            <a href="{{ route('admin.coupons.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('coupons.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
-                                <i class="bi bi-ticket-perforated text-base {{ request()->routeIs('coupons.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                            <a href="{{ route('admin.coupons.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('admin.coupons.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                                <i class="bi bi-ticket-perforated text-base {{ request()->routeIs('admin.coupons.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
                                 <span>Mã Giảm Giá</span>
                             </a>
                         </li>
                         <li>
-                            <a href="{{ route('admin.flash_sales.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('flash_sales.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
-                                <i class="bi bi-lightning-charge text-base {{ request()->routeIs('flash_sales.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                            <a href="{{ route('admin.flash_sales.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('admin.flash_sales.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                                <i class="bi bi-lightning-charge text-base {{ request()->routeIs('admin.flash_sales.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
                                 <span>Flash Sale</span>
                             </a>
                         </li>
 
                         <li>
-                            <a href="{{ route('admin.posts.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('posts.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
-                                <i class="bi bi-journal-text text-base {{ request()->routeIs('posts.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                            <a href="{{ route('admin.posts.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('admin.posts.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                                <i class="bi bi-journal-text text-base {{ request()->routeIs('admin.posts.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
                                 <span>Tạp chí / Lookbook</span>
                             </a>
                         </li>
@@ -441,20 +468,20 @@
                 
                 <!-- System Section -->
                 <div class="mt-4 mb-4">
-                    <button type="button" class="flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-slate-800 dark:text-slate-200 transition-colors group" aria-controls="dropdown-system" data-collapse-toggle="dropdown-system">
+                    <button type="button" class="flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-slate-800 dark:text-slate-200 transition-colors group cursor-pointer" aria-controls="dropdown-system" data-collapse-toggle="dropdown-system">
                         <span>Hệ thống</span>
-                        <i class="bi bi-chevron-down text-[10px] text-slate-400 transition-transform duration-200 {{ request()->routeIs('users.*') || request()->routeIs('settings.*') ? 'rotate-180' : 'group-data-[collapse-open]:rotate-180' }}"></i>
+                        <i class="bi bi-chevron-down text-[10px] text-slate-400 transition-transform duration-200 {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.settings.*') ? 'rotate-180' : 'group-data-[collapse-open]:rotate-180' }}"></i>
                     </button>
-                    <ul id="dropdown-system" class="{{ request()->routeIs('users.*') || request()->routeIs('settings.*') ? '' : 'hidden' }} space-y-1 py-1 mt-1">
+                    <ul id="dropdown-system" class="{{ request()->routeIs('admin.users.*') || request()->routeIs('admin.settings.*') ? '' : 'hidden' }} space-y-1 py-1 mt-1">
                         <li>
-                            <a href="{{ route('admin.users.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('users.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
-                                <i class="bi bi-people text-base {{ request()->routeIs('users.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                            <a href="{{ route('admin.users.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('admin.users.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                                <i class="bi bi-people text-base {{ request()->routeIs('admin.users.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
                                 <span>Tài khoản</span>
                             </a>
                         </li>
                         <li>
-                            <a href="{{ route('admin.settings.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('settings.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
-                                <i class="bi bi-gear text-base {{ request()->routeIs('settings.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
+                            <a href="{{ route('admin.settings.index') }}" class="flex items-center gap-3 px-3 py-2 pl-9 text-sm rounded-lg transition-colors {{ request()->routeIs('admin.settings.*') ? 'text-primary-700 dark:text-primary-400 font-medium bg-primary-50/50 dark:bg-primary-900/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50' }}">
+                                <i class="bi bi-gear text-base {{ request()->routeIs('admin.settings.*') ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400' }}"></i>
                                 <span>Cài đặt chung</span>
                             </a>
                         </li>
@@ -513,34 +540,78 @@
                 title: '{{ session('error') }}'
             });
         @endif
+
+        @if(session('warning'))
+            Toast.fire({
+                icon: 'warning',
+                title: '{{ session('warning') }}'
+            });
+        @endif
+
+        @if(session('info'))
+            Toast.fire({
+                icon: 'info',
+                title: '{{ session('info') }}'
+            });
+        @endif
+
+        @if($errors->any())
+            Toast.fire({
+                icon: 'error',
+                title: '{{ $errors->first() }}'
+            });
+        @endif
     </script>
 
-    <!-- Global form delete confirmation -->
+    <!-- Global SweetAlert2 Handlers (Alert override & Form confirmations) -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const deleteForms = document.querySelectorAll('.form-delete');
-            deleteForms.forEach(form => {
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    const title = this.dataset.confirmTitle || 'Xóa dữ liệu?';
-                    const text = this.dataset.confirmText || 'Hành động này không thể hoàn tác!';
-                    
-                    Swal.fire({
-                        title: title,
-                        text: text,
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#6366f1',
-                        cancelButtonColor: '#64748b',
-                        confirmButtonText: '<i class="bi bi-trash"></i> Đồng ý xóa',
-                        cancelButtonText: 'Hủy'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            form.submit();
-                        }
-                    });
+        // Override native window.alert with modern SweetAlert2
+        window.alert = function(message) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Thông báo',
+                    text: String(message),
+                    icon: 'info',
+                    confirmButtonColor: '#4f46e5',
+                    confirmButtonText: 'Đóng'
                 });
-            });
+            } else {
+                console.log('Alert:', message);
+            }
+        };
+
+        // Delegated submit handler for forms with .form-delete or .form-confirm
+        document.addEventListener('submit', function(e) {
+            const form = e.target;
+            if (!form || !form.classList) return;
+
+            const isDelete = form.classList.contains('form-delete');
+            const isConfirm = form.classList.contains('form-confirm');
+
+            if (isDelete || isConfirm) {
+                e.preventDefault();
+                const title = form.dataset.confirmTitle || (isDelete ? 'Xóa dữ liệu?' : 'Xác nhận hành động?');
+                const text = form.dataset.confirmText || (isDelete ? 'Hành động này không thể hoàn tác!' : 'Bạn có chắc chắn muốn thực hiện hành động này?');
+                const icon = form.dataset.confirmIcon || (isDelete ? 'warning' : 'question');
+                const confirmBtn = form.dataset.confirmBtn || (isDelete ? '<i class="bi bi-trash mr-1"></i> Đồng ý xóa' : '<i class="bi bi-check-lg mr-1"></i> Đồng ý');
+                const confirmColor = form.dataset.confirmColor || (isDelete ? '#ef4444' : '#4f46e5');
+
+                Swal.fire({
+                    title: title,
+                    text: text,
+                    icon: icon,
+                    showCancelButton: true,
+                    confirmButtonColor: confirmColor,
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: confirmBtn,
+                    cancelButtonText: 'Hủy',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            }
         });
     </script>
     
@@ -558,6 +629,22 @@
             
             document.querySelectorAll('.theme-btn').forEach(b => b.onclick = (e) => setTheme(e.currentTarget.dataset.themeValue));
             window.matchMedia('(prefers-color-scheme: dark)').onchange = () => { if(localStorage.getItem('color-theme') === 'system') setTheme('system'); };
+
+            // Sidebar dropdown accordion toggles
+            document.querySelectorAll('[data-collapse-toggle]').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('data-collapse-toggle') || this.getAttribute('aria-controls');
+                    const targetEl = document.getElementById(targetId);
+                    if (targetEl) {
+                        targetEl.classList.toggle('hidden');
+                        const icon = this.querySelector('.bi-chevron-down');
+                        if (icon) {
+                            icon.classList.toggle('rotate-180');
+                        }
+                    }
+                });
+            });
         });
 
         function markNotificationAsRead(id, element) {
@@ -576,6 +663,7 @@
     </script>
     
     @stack('scripts')
+    @yield('scripts')
 </body>
 </html>
 
