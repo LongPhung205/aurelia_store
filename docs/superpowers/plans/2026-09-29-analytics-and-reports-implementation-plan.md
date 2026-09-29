@@ -1,6 +1,6 @@
 # Analytics & Reports Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Build a business intelligence Analytics & Reports module (`/admin/analytics`) for Aurelia Store featuring flexible period-over-period comparisons, KPI growth rates, dual-axis revenue & order trend charts, product ranking & slow-moving alerts, and streamed UTF-8 BOM Excel/CSV reports.
 
@@ -27,7 +27,7 @@
 **Interfaces:**
 - Produces: `route('admin.analytics.index')` returning `view('admin.analytics.index')`, protected by `['auth', 'role:admin']`.
 
-- [ ] **Step 1: Write the failing test for authorization and route response**
+- [x] **Step 1: Write the failing test for authorization and route response**
 
 Create `tests/Feature/Admin/AnalyticsTest.php`:
 ```php
@@ -66,12 +66,12 @@ class AnalyticsTest extends TestCase
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `php artisan test tests/Feature/Admin/AnalyticsTest.php`  
 Expected: FAIL (Route or Controller not found).
 
-- [ ] **Step 3: Define routes and create minimal controller and view**
+- [x] **Step 3: Define routes and create minimal controller and view**
 
 In `routes/web.php` inside `Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(...)`:
 ```php
@@ -115,12 +115,12 @@ Create placeholder `resources/views/admin/analytics/index.blade.php`:
 @endsection
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `php artisan test tests/Feature/Admin/AnalyticsTest.php`  
 Expected: PASS (All 3 tests pass).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add app/Http/Controllers/Admin/AnalyticsController.php routes/web.php resources/views/admin/analytics/index.blade.php tests/Feature/Admin/AnalyticsTest.php
@@ -140,7 +140,7 @@ git commit -m "feat(analytics): add route, controller, placeholder view and auth
   `['current' => ['start' => Carbon, 'end' => Carbon], 'previous' => ['start' => Carbon, 'end' => Carbon], 'days' => int]`
 - Produces: `AnalyticsService::calculateGrowth(float $current, float $previous): float`
 
-- [ ] **Step 1: Write unit tests for period calculation and growth rate**
+- [x] **Step 1: Write unit tests for period calculation and growth rate**
 
 Create `tests/Unit/Services/AnalyticsServiceTest.php`:
 ```php
@@ -199,12 +199,12 @@ class AnalyticsServiceTest extends TestCase
 }
 ```
 
-- [ ] **Step 2: Run unit test to verify it fails**
+- [x] **Step 2: Run unit test to verify it fails**
 
 Run: `php artisan test tests/Unit/Services/AnalyticsServiceTest.php`  
 Expected: FAIL (Class `App\Services\AnalyticsService` does not exist).
 
-- [ ] **Step 3: Implement period and growth calculation in AnalyticsService**
+- [x] **Step 3: Implement period and growth calculation in AnalyticsService**
 
 Create `app/Services/AnalyticsService.php`:
 ```php
@@ -280,12 +280,12 @@ class AnalyticsService
 }
 ```
 
-- [ ] **Step 4: Run unit test to verify it passes**
+- [x] **Step 4: Run unit test to verify it passes**
 
 Run: `php artisan test tests/Unit/Services/AnalyticsServiceTest.php`  
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add app/Services/AnalyticsService.php tests/Unit/Services/AnalyticsServiceTest.php
@@ -312,7 +312,7 @@ git commit -m "feat(analytics): implement period resolution and growth rate arit
   - `slowProducts`: collection of dead stock items
   - `categoryStats`: detailed category breakdown collection
 
-- [ ] **Step 1: Write Feature test asserting analytics data structure and calculations**
+- [x] **Step 1: Write Feature test asserting analytics data structure and calculations**
 
 Add to `tests/Feature/Admin/AnalyticsTest.php`:
 ```php
@@ -347,12 +347,12 @@ Add to `tests/Feature/Admin/AnalyticsTest.php`:
     }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `php artisan test tests/Feature/Admin/AnalyticsTest.php`  
 Expected: FAIL (`assertViewHas('data')` fails).
 
-- [ ] **Step 3: Implement data aggregation methods in AnalyticsService**
+- [x] **Step 3: Implement data aggregation methods in AnalyticsService**
 
 In `app/Services/AnalyticsService.php`, add methods:
 - `getAnalyticsData(string $range, ?string $from, ?string $to)`
@@ -364,7 +364,7 @@ In `app/Services/AnalyticsService.php`, add methods:
 
 (Full query implementations using Eloquent models `Order`, `OrderItem`, `Product`, `ProductVariant`, `User`, `Category`).
 
-- [ ] **Step 4: Update AnalyticsController to pass service data to view**
+- [x] **Step 4: Update AnalyticsController to pass service data to view**
 
 In `app/Http/Controllers/Admin/AnalyticsController.php`:
 ```php
@@ -398,12 +398,12 @@ class AnalyticsController extends Controller
 }
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `php artisan test tests/Feature/Admin/AnalyticsTest.php`  
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add app/Services/AnalyticsService.php app/Http/Controllers/Admin/AnalyticsController.php tests/Feature/Admin/AnalyticsTest.php
@@ -422,7 +422,7 @@ git commit -m "feat(analytics): implement data aggregation pipeline for KPIs, tr
 - Produces: Interactive analytical UI with 4 KPI cards, dual-axis ApexCharts, 2 distribution charts, and 3 data tabs.
 - Produces: Sidebar link pointing to `route('admin.analytics.index')` with active state styling.
 
-- [ ] **Step 1: Update admin sidebar in admin.blade.php**
+- [x] **Step 1: Update admin sidebar in admin.blade.php**
 
 In `resources/views/admin/layouts/admin.blade.php` around line 300:
 Update the Analytics sidebar link from `href="#"` to:
@@ -437,7 +437,7 @@ Update the Analytics sidebar link from `href="#"` to:
 </li>
 ```
 
-- [ ] **Step 2: Construct full Analytics Blade view**
+- [x] **Step 2: Construct full Analytics Blade view**
 
 In `resources/views/admin/analytics/index.blade.php`:
 - Filter toolbar with presets (`today`, `last_7_days`, `last_30_days`, `this_month`, `this_year`) and custom date inputs.
@@ -447,12 +447,12 @@ In `resources/views/admin/analytics/index.blade.php`:
 - 3 Tabs: Top 10 Bán Chạy, ⚠️ Sản Phẩm Bán Chậm, 📁 Hiệu Suất Danh Mục.
 - ApexCharts theme listener reacting to `document.documentElement.classList.contains('dark')`.
 
-- [ ] **Step 3: Test rendering and route verification**
+- [x] **Step 3: Test rendering and route verification**
 
 Run: `php artisan test tests/Feature/Admin/AnalyticsTest.php`  
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add resources/views/admin/analytics/index.blade.php resources/views/admin/layouts/admin.blade.php
@@ -472,7 +472,7 @@ git commit -m "feat(analytics): build analytics dashboard UI with ApexCharts and
 - Produces: `AnalyticsService::streamCsvReport(array $data): StreamedResponse`
 - Produces: `route('admin.analytics.export')` triggering immediate download of `bao_cao_analytics_aurelia_[from]_[to].csv`.
 
-- [ ] **Step 1: Write test for CSV export endpoint**
+- [x] **Step 1: Write test for CSV export endpoint**
 
 Add to `tests/Feature/Admin/AnalyticsTest.php`:
 ```php
@@ -492,12 +492,12 @@ Add to `tests/Feature/Admin/AnalyticsTest.php`:
     }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `php artisan test tests/Feature/Admin/AnalyticsTest.php`  
 Expected: FAIL (JSON was returned instead of CSV stream).
 
-- [ ] **Step 3: Implement streamCsvReport in AnalyticsService and AnalyticsController**
+- [x] **Step 3: Implement streamCsvReport in AnalyticsService and AnalyticsController**
 
 In `app/Services/AnalyticsService.php`:
 ```php
@@ -568,12 +568,12 @@ In `app/Http/Controllers/Admin/AnalyticsController.php`:
     }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `php artisan test tests/Feature/Admin/AnalyticsTest.php`  
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add app/Services/AnalyticsService.php app/Http/Controllers/Admin/AnalyticsController.php tests/Feature/Admin/AnalyticsTest.php
@@ -588,12 +588,12 @@ git commit -m "feat(analytics): implement streamed UTF-8 BOM CSV export for anal
 - Verification: Run all test suites
 - Git: Push to `origin main` to trigger Render deployment
 
-- [ ] **Step 1: Run complete test suite**
+- [x] **Step 1: Run complete test suite**
 
 Run: `php artisan test`  
 Expected: PASS (All tests pass without regression).
 
-- [ ] **Step 2: Push changes to GitHub**
+- [x] **Step 2: Push changes to GitHub**
 
 ```bash
 git push origin main
