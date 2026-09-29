@@ -15,6 +15,9 @@ CA_FILE="/run/app-certificates/mysql-ca.pem"
 if [ -f "/etc/secrets/ca.pem" ]; then
     echo "[ENTRYPOINT] Detected Secret File at /etc/secrets/ca.pem. Installing..."
     cp /etc/secrets/ca.pem "$CA_FILE"
+elif [ -f "/var/www/html/docker/aiven_ca.pem" ]; then
+    echo "[ENTRYPOINT] Detected built-in Aiven CA certificate. Installing..."
+    cp /var/www/html/docker/aiven_ca.pem "$CA_FILE"
 elif [ -n "${MYSQL_CA_CONTENT:-}" ]; then
     echo "[ENTRYPOINT] Detected MYSQL_CA_CONTENT environment variable. Writing certificate..."
     printf '%s\n' "$MYSQL_CA_CONTENT" > "$CA_FILE"
@@ -67,12 +70,18 @@ php artisan view:cache
 # 6. Database Migrations & Seeders
 if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
     echo "[ENTRYPOINT] RUN_MIGRATIONS is true. Executing migrations..."
-    php artisan migrate --force
+    if ! php artisan migrate --force --verbose; then
+        echo "[ENTRYPOINT] ERROR: Migration failed! Please verify DB_HOST, DB_PASSWORD, and Aiven MySQL status."
+        exit 1
+    fi
 fi
 
 if [ "${RUN_SEEDERS:-false}" = "true" ]; then
     echo "[ENTRYPOINT] RUN_SEEDERS is true. Executing seeders..."
-    php artisan db:seed --force
+    if ! php artisan db:seed --force --verbose; then
+        echo "[ENTRYPOINT] ERROR: Seeding failed! Please verify SEED_ADMIN_* variables."
+        exit 1
+    fi
 fi
 
 # 7. Validate Nginx and PHP-FPM syntax
