@@ -1,0 +1,60 @@
+# Git & Version Control
+.git
+.gitignore
+.gitattributes
+.github
+
+# Agent & Workspace Tooling
+.agents
+scratch
+docs
+images
+
+# Environment & Sensitive Credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+*.crt
+*.sql
+*.sqlite
+
+# Dependencies & Build artifacts (managed inside Docker stages)
+node_modules
+vendor
+public/build
+public/hot
+public/storage
+
+# Logs & Framework caches
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*
+!storage/framework/cache/.gitignore
+!storage/framework/sessions/.gitignore
+!storage/framework/views/.gitignore
+!storage/logs/.gitignore
+
+# Testing & Dev tools
+tests
+.phpunit.result.cache
+phpunit.xml
+.editorconfig
+.prettierrc
+.eslintrc*
+
+# Docker files
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# IDE / OS specific
+.idea
+.vscode
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
