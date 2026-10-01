@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -15,11 +16,20 @@ class GhnService
 
     public function __construct()
     {
-        $this->apiUrl = config('services.ghn.api_url', 'https://dev-online-gateway.ghn.vn/shiip/public-api');
+        $rawUrl = config('services.ghn.api_url', 'https://dev-online-gateway.ghn.vn/shiip/public-api');
+        $this->apiUrl = rtrim($rawUrl, '/') . '/';
         $this->token = config('services.ghn.token');
         $this->shopId = config('services.ghn.shop_id');
         $this->fromDistrictId = config('services.ghn.from_district_id');
         $this->fromWardCode = config('services.ghn.from_ward_code');
+    }
+
+    /**
+     * Tạo URL chuẩn, tránh lỗi RFC 3986 của Guzzle khi base_uri có path component
+     */
+    protected function requestUrl(string $path): string
+    {
+        return $this->apiUrl . ltrim($path, '/');
     }
 
     /**
@@ -31,18 +41,28 @@ class GhnService
             'token' => $this->token,
             'ShopId' => $this->shopId,
             'Content-Type' => 'application/json'
-        ])->baseUrl($this->apiUrl);
+        ])->timeout(10);
     }
 
     /**
-     * Lấy danh sách Tỉnh/Thành phố
+     * Lấy danh sách Tỉnh/Thành phố (hỗ trợ Cache 7 ngày)
      */
     public function getProvinces()
     {
         try {
-            $response = $this->client()->get('/master-data/province');
+            $cached = Cache::get('ghn_provinces_list');
+            if (!empty($cached) && is_array($cached)) {
+                return $cached;
+            }
+
+            $response = $this->client()->get($this->requestUrl('master-data/province'));
             if ($response->successful()) {
-                return $response->json('data');
+                $data = $response->json('data') ?? [];
+                if (!empty($data) && is_array($data)) {
+                    usort($data, fn($a, $b) => strcmp($a['ProvinceName'], $b['ProvinceName']));
+                    Cache::put('ghn_provinces_list', $data, now()->addDays(7));
+                    return $data;
+                }
             }
             Log::error('GHN getProvinces Error: ' . $response->body());
             return [];
@@ -53,16 +73,26 @@ class GhnService
     }
 
     /**
-     * Lấy danh sách Quận/Huyện theo Tỉnh
+     * Lấy danh sách Quận/Huyện theo Tỉnh (hỗ trợ Cache 3 ngày)
      */
     public function getDistricts($provinceId)
     {
         try {
-            $response = $this->client()->get('/master-data/district', [
-                'province_id' => $provinceId
+            $cacheKey = 'ghn_districts_province_' . $provinceId;
+            $cached = Cache::get($cacheKey);
+            if (!empty($cached) && is_array($cached)) {
+                return $cached;
+            }
+
+            $response = $this->client()->get($this->requestUrl('master-data/district'), [
+                'province_id' => (int) $provinceId
             ]);
             if ($response->successful()) {
-                return $response->json('data');
+                $data = $response->json('data') ?? [];
+                if (!empty($data)) {
+                    Cache::put($cacheKey, $data, now()->addDays(3));
+                }
+                return $data;
             }
             Log::error('GHN getDistricts Error: ' . $response->body());
             return [];
@@ -73,16 +103,26 @@ class GhnService
     }
 
     /**
-     * Lấy danh sách Phường/Xã theo Quận/Huyện
+     * Lấy danh sách Phường/Xã theo Quận/Huyện (hỗ trợ Cache 3 ngày)
      */
     public function getWards($districtId)
     {
         try {
-            $response = $this->client()->get('/master-data/ward', [
-                'district_id' => $districtId
+            $cacheKey = 'ghn_wards_district_' . $districtId;
+            $cached = Cache::get($cacheKey);
+            if (!empty($cached) && is_array($cached)) {
+                return $cached;
+            }
+
+            $response = $this->client()->get($this->requestUrl('master-data/ward'), [
+                'district_id' => (int) $districtId
             ]);
             if ($response->successful()) {
-                return $response->json('data');
+                $data = $response->json('data') ?? [];
+                if (!empty($data)) {
+                    Cache::put($cacheKey, $data, now()->addDays(3));
+                }
+                return $data;
             }
             Log::error('GHN getWards Error: ' . $response->body());
             return [];
@@ -98,7 +138,7 @@ class GhnService
     public function calculateFee($toDistrictId, $toWardCode, $weight = 200, $length = 10, $width = 10, $height = 10)
     {
         try {
-            $response = $this->client()->post('/v2/shipping-order/fee', [
+            $response = $this->client()->post($this->requestUrl('v2/shipping-order/fee'), [
                 'from_district_id' => (int)$this->fromDistrictId,
                 'from_ward_code' => (string)$this->fromWardCode,
                 'service_id' => 53320, // 53320 là id dịch vụ Chuẩn
@@ -131,7 +171,7 @@ class GhnService
     public function createOrder($orderData)
     {
         try {
-            $response = $this->client()->post('/v2/shipping-order/create', $orderData);
+            $response = $this->client()->post($this->requestUrl('v2/shipping-order/create'), $orderData);
             
             if ($response->successful()) {
                 return [
@@ -162,7 +202,7 @@ class GhnService
     public function getOrderInfo($orderCode)
     {
         try {
-            $response = $this->client()->post('/v2/shipping-order/detail', [
+            $response = $this->client()->post($this->requestUrl('v2/shipping-order/detail'), [
                 'order_code' => $orderCode
             ]);
             

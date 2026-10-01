@@ -32,6 +32,12 @@ return [
         'verify_ssl' => env('MOMO_VERIFY_SSL', true),
     ],
 
+    'payos' => [
+        'client_id' => env('PAYOS_CLIENT_ID'),
+        'api_key' => env('PAYOS_API_KEY'),
+        'checksum_key' => env('PAYOS_CHECKSUM_KEY'),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
@@ -43,6 +49,14 @@ return [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
+    ],
+
+    'ghn' => [
+        'api_url' => env('GHN_API_URL', 'https://dev-online-gateway.ghn.vn/shiip/public-api'),
+        'token' => env('GHN_TOKEN', '967614f9-688b-11f1-a973-aee5264794df'),
+        'shop_id' => env('GHN_SHOP_ID', '200696'),
+        'from_district_id' => env('GHN_FROM_DISTRICT_ID', '1482'),
+        'from_ward_code' => env('GHN_FROM_WARD_CODE', '1A0607'),
     ],
 
 ];
