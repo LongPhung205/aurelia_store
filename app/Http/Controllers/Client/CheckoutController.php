@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use App\Models\Coupon;
 use App\Models\Order;
+use App\Models\InventoryHistory;
 use App\Models\PaymentTransaction;
 use App\Models\ProductVariant;
 use App\Models\User;
@@ -223,7 +224,22 @@ class CheckoutController extends Controller
                 ]);
 
                 // Deduct stock immediately to reserve it, regardless of payment method
+                $stockBefore = $lockedVariant->stock_quantity;
                 $lockedVariant->decrement('stock_quantity', $item->quantity);
+                $stockAfter = $lockedVariant->stock_quantity;
+
+                // Ghi nhận lịch sử xuất kho (Thẻ kho) cho đơn hàng
+                InventoryHistory::create([
+                    'product_variant_id' => $lockedVariant->id,
+                    'reference_type' => Order::class,
+                    'reference_id' => $order->id,
+                    'type' => 'export',
+                    'quantity_changed' => -$item->quantity,
+                    'stock_before' => $stockBefore,
+                    'stock_after' => $stockAfter,
+                    'user_id' => auth()->id(),
+                    'note' => 'Xuất kho cho đơn hàng ORD-' . $order->id,
+                ]);
             }
 
             // Clear only selected items from cart

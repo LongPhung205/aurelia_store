@@ -25,6 +25,10 @@ class InventoryHistoryController extends Controller
         ->groupBy('reference_type', 'reference_id', 'type', 'user_id', 'group_id')
         ->orderBy('created_at', 'desc');
             
+        if ($request->filled('type') && in_array($request->type, ['import', 'export', 'adjustment'])) {
+            $query->where('type', $request->type);
+        }
+
         if ($request->filled('sku')) {
             $query->whereHas('variant', function($q) use ($request) {
                 $q->where('sku', 'like', '%' . $request->sku . '%');
@@ -32,6 +36,13 @@ class InventoryHistoryController extends Controller
         }
 
         $histories = $query->paginate(20)->appends($request->all());
+
+        $counts = [
+            'all' => InventoryHistory::count(),
+            'import' => InventoryHistory::where('type', 'import')->count(),
+            'export' => InventoryHistory::where('type', 'export')->count(),
+            'adjustment' => InventoryHistory::where('type', 'adjustment')->count(),
+        ];
 
         foreach ($histories as $history) {
             $history->preview_variants = collect();
@@ -53,7 +64,7 @@ class InventoryHistoryController extends Controller
             }
         }
 
-        return view('admin.inventory_history.index', compact('histories'));
+        return view('admin.inventory_history.index', compact('histories', 'counts'));
     }
 
     public function details(Request $request)

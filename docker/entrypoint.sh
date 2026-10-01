@@ -84,6 +84,9 @@ if [ "${RUN_SEEDERS:-false}" = "true" ]; then
     fi
 fi
 
+# Ensure all existing orders have inventory export histories
+php artisan app:sync-order-inventory-history || true
+
 # 7. Validate Nginx and PHP-FPM syntax
 echo "[ENTRYPOINT] Checking Nginx configuration..."
 nginx -t

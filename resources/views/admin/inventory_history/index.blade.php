@@ -26,19 +26,58 @@
     </div>
 
     <x-admin.card class="flex-1 flex flex-col min-h-0 border-0 shadow-sm" bodyClass="flex-1 flex flex-col min-h-0" noPadding="true">
-        <div class="p-4 border-b border-gray-200 dark:border-gray-700 shrink-0 flex justify-between items-center bg-white dark:bg-gray-800 rounded-t-lg">
-            <form action="{{ route('admin.inventory_history.index') }}" method="GET" class="flex w-full md:w-1/2">
-                <div class="relative w-full">
+        <div class="p-4 border-b border-gray-200 dark:border-gray-700 shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-gray-800 rounded-t-lg">
+            <!-- Filter Tabs -->
+            <div class="flex items-center space-x-1 p-1 bg-gray-100 dark:bg-gray-700/60 rounded-xl text-sm">
+                <a href="{{ route('admin.inventory_history.index', array_merge(request()->except('type', 'page'))) }}" 
+                   class="px-3.5 py-1.5 rounded-lg font-medium transition-all {{ !request()->filled('type') ? 'bg-white dark:bg-gray-800 text-slate-900 dark:text-white shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' }}">
+                   Tất cả
+                   @if(isset($counts['all']) && $counts['all'] > 0)
+                       <span class="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold">{{ $counts['all'] }}</span>
+                   @endif
+                </a>
+                <a href="{{ route('admin.inventory_history.index', array_merge(request()->except('type', 'page'), ['type' => 'import'])) }}" 
+                   class="px-3.5 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 {{ request('type') === 'import' ? 'bg-white dark:bg-gray-800 text-emerald-700 dark:text-emerald-400 shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-emerald-600' }}">
+                   <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                   Nhập kho
+                   @if(isset($counts['import']) && $counts['import'] > 0)
+                       <span class="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 font-semibold">{{ $counts['import'] }}</span>
+                   @endif
+                </a>
+                <a href="{{ route('admin.inventory_history.index', array_merge(request()->except('type', 'page'), ['type' => 'export'])) }}" 
+                   class="px-3.5 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 {{ request('type') === 'export' ? 'bg-white dark:bg-gray-800 text-rose-700 dark:text-rose-400 shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-rose-600' }}">
+                   <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                   Xuất kho
+                   @if(isset($counts['export']) && $counts['export'] > 0)
+                       <span class="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300 font-semibold">{{ $counts['export'] }}</span>
+                   @endif
+                </a>
+                <a href="{{ route('admin.inventory_history.index', array_merge(request()->except('type', 'page'), ['type' => 'adjustment'])) }}" 
+                   class="px-3.5 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 {{ request('type') === 'adjustment' ? 'bg-white dark:bg-gray-800 text-slate-900 dark:text-white shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900' }}">
+                   <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                   Điều chỉnh
+                   @if(isset($counts['adjustment']) && $counts['adjustment'] > 0)
+                       <span class="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold">{{ $counts['adjustment'] }}</span>
+                   @endif
+                </a>
+            </div>
+
+            <!-- Search Form -->
+            <form action="{{ route('admin.inventory_history.index') }}" method="GET" class="flex w-full md:w-auto items-center">
+                @if(request()->filled('type'))
+                    <input type="hidden" name="type" value="{{ request('type') }}">
+                @endif
+                <div class="relative w-full md:w-64">
                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                         <i class="bi bi-search text-gray-500 dark:text-gray-400"></i>
                     </div>
-                    <input type="text" name="sku" value="{{ request('sku') }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Tra cứu theo mã SKU sản phẩm...">
+                    <input type="text" name="sku" value="{{ request('sku') }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Tra cứu theo mã SKU...">
                 </div>
-                <button type="submit" class="p-2.5 ml-2 text-sm font-medium text-white bg-blue-700 rounded-lg border border-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                <button type="submit" class="p-2 ml-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 focus:ring-4 focus:ring-primary-300">
                     <i class="bi bi-search"></i> Lọc
                 </button>
                 @if(request()->filled('sku'))
-                    <a href="{{ route('admin.inventory_history.index') }}" class="p-2.5 ml-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">Xóa lọc</a>
+                    <a href="{{ route('admin.inventory_history.index', request()->only('type')) }}" class="p-2 ml-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">Xóa lọc</a>
                 @endif
             </form>
         </div>
