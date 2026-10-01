@@ -118,6 +118,11 @@ class PayOSController extends Controller
 
     public function webhook(Request $request)
     {
+        // Support GET / HEAD health-check from browser or webhook checkers
+        if ($request->isMethod('get') || $request->isMethod('head')) {
+            return response()->json(['status' => 'ok', 'message' => 'PayOS Webhook Endpoint is active'], 200);
+        }
+
         $webhookData = $request->all();
 
         // 1. Scalar / Malformed Payload Protection
@@ -146,6 +151,13 @@ class PayOSController extends Controller
         $order = $transaction ? $transaction->order : (Order::find($orderCode) ?? Order::where('shipping_order_code', (string) $orderCode)->first());
 
         if (! $order) {
+            // Xử lý gói tin mẫu (sample test webhook) khi PayOS xác nhận Webhook URL trên Dashboard / API
+            if ($orderCode == 123 || $orderCode == 0 || ($verifiedData['description'] ?? '') === 'VQRIO123' || str_contains(strtolower($verifiedData['description'] ?? ''), 'test') || str_contains(strtolower($verifiedData['description'] ?? ''), 'thu nghiem')) {
+                Log::info("PayOS Webhook: Xác nhận gói tin mẫu thành công cho orderCode: {$orderCode}");
+
+                return response()->json(['error' => 0, 'message' => 'Webhook URL verified successfully', 'data' => null]);
+            }
+
             Log::error("PayOS Webhook Order Not Found for orderCode: {$orderCode}");
 
             return response()->json(['error' => 1, 'message' => 'Order not found'], 404);

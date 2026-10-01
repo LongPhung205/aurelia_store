@@ -196,4 +196,30 @@ Chuyển sang mục **Environment Variables**, thêm các biến sau:
     ```
 
 ---
+
+## 8. Hướng dẫn Kích hoạt Webhook PayOS sau khi Deploy
+
+Sau khi ứng dụng hoạt động trên Render (`https://aurelia-store.onrender.com`), thực hiện các bước sau để PayOS tự động bắn webhook cập nhật đơn hàng:
+
+### Cách 1: Đăng ký trên Dashboard PayOS (Khuyên dùng)
+1. Đăng nhập [my.payos.vn](https://my.payos.vn/).
+2. Chọn **Kênh thanh toán** của bạn.
+3. Tìm đến mục **Webhook URL** và dán đường link:
+   ```text
+   https://aurelia-store.onrender.com/payos/webhook
+   ```
+4. Bấm **Xác nhận / Lưu Webhook**. Hệ thống PayOS sẽ gửi gói tin test và website sẽ trả về `200 OK` (đã hỗ trợ sẵn trong `PayOSController`).
+
+### Cách 2: Kích hoạt qua Artisan Command trên Render Shell
+Mở tab **Shell** trong dịch vụ Render của bạn và chạy lệnh:
+```bash
+php artisan payos:confirm-webhook
+```
+Hoặc chỉ định URL cụ thể:
+```bash
+php artisan payos:confirm-webhook https://aurelia-store.onrender.com/payos/webhook
+```
+
+---
 *Tài liệu được khởi tạo và kiểm chuẩn tự động cho dự án Aurelia Store.*
+

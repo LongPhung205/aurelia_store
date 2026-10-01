@@ -64,7 +64,7 @@ Route::prefix('payos')->name('payos.')->group(function () {
     Route::get('/create/{order}', [Client\PayOSController::class, 'create'])->name('create');
     Route::get('/return', [Client\PayOSController::class, 'returnPage'])->name('return');
     Route::get('/cancel', [Client\PayOSController::class, 'cancelPage'])->name('cancel');
-    Route::post('/webhook', [Client\PayOSController::class, 'webhook'])->name('webhook');
+    Route::match(['get', 'post'], '/webhook', [Client\PayOSController::class, 'webhook'])->name('webhook');
 });
 
 // MoMo Routes
