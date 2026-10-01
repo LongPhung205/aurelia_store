@@ -322,9 +322,9 @@
     function filterApp() {
         return {
             sidebarOpen: false,
-            priceMin: {{ request('price_min', $priceStats->min_price ?? 0) }},
+            priceMin: {{ request('price_min', 0) }},
             priceMax: {{ request('price_max', $priceStats->max_price ?? 5000000) }},
-            absoluteMin: {{ $priceStats->min_price ?? 0 }},
+            absoluteMin: 0,
             absoluteMax: {{ $priceStats->max_price ?? 5000000 }},
             formatPrice(val) { return new Intl.NumberFormat('vi-VN').format(val) + 'đ'; }
         }
