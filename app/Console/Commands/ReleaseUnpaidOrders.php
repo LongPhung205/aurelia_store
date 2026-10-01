@@ -111,7 +111,22 @@ class ReleaseUnpaidOrders extends Command
                             ->first();
 
                         if ($variant) {
+                            $stockBefore = $variant->stock_quantity;
                             $variant->increment('stock_quantity', $item->quantity);
+                            $stockAfter = $stockBefore + $item->quantity;
+
+                            // Ghi log hoàn trả (thẻ kho type 'import')
+                            \App\Models\InventoryHistory::create([
+                                'product_variant_id' => $variant->id,
+                                'reference_type' => \App\Models\Order::class,
+                                'reference_id' => $order->id,
+                                'type' => 'import',
+                                'quantity_changed' => $item->quantity,
+                                'stock_before' => $stockBefore,
+                                'stock_after' => $stockAfter,
+                                'user_id' => null, // Hệ thống tự động
+                                'note' => 'Nhập lại kho do hủy/hoàn đơn hàng ORD-' . $order->id . ' (Quá hạn thanh toán)',
+                            ]);
                         }
                     }
                 });

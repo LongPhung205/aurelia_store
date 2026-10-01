@@ -2,6 +2,24 @@
 
 @section('title', $category->name . ' — Aurelia')
 
+@push('styles')
+<style>
+/* Custom scrollbar for filter list */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent; 
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #e2e8f0; 
+    border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e1; 
+}
+</style>
+@endpush
 @section('full_width_top')
 {{-- Category Banner --}}
 <section class="bg-gray-900 py-12 md:py-16 relative overflow-hidden mb-8">
@@ -64,51 +82,70 @@
                     <input type="hidden" name="sort" value="{{ $sort }}">
 
                     {{-- Price Range --}}
-                    <div class="space-y-3">
-                        <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wider">Khoảng giá</h4>
-                        <div class="flex items-center justify-between text-xs text-gray-500">
+                    <div class="space-y-4">
+                        <h4 class="text-sm font-semibold text-gray-900 uppercase tracking-wider">Khoảng giá</h4>
+                        <div class="flex items-center justify-between text-sm font-medium text-gray-700">
                             <span x-text="formatPrice(priceMin)"></span>
                             <span x-text="formatPrice(priceMax)"></span>
                         </div>
-                        <input type="range" name="price_min" :min="absoluteMin" :max="absoluteMax" step="50000" x-model="priceMin" @input="if(priceMin > priceMax) priceMax = priceMin" class="w-full h-1.5 bg-gray-200 rounded-full appearance-none accent-brand cursor-pointer">
-                        <input type="range" name="price_max" :min="absoluteMin" :max="absoluteMax" step="50000" x-model="priceMax" @input="if(priceMax < priceMin) priceMin = priceMax" class="w-full h-1.5 bg-gray-200 rounded-full appearance-none accent-brand cursor-pointer">
+                        
+                        <div class="relative w-full h-8 flex items-center">
+                            <!-- Track background -->
+                            <div class="absolute left-0 right-0 h-1 bg-gray-200 rounded-full"></div>
+                            
+                            <!-- Active track -->
+                            <div class="absolute h-1 bg-gray-900 rounded-full pointer-events-none" 
+                                 :style="`left: ${absoluteMax > absoluteMin ? ((priceMin - absoluteMin) / (absoluteMax - absoluteMin)) * 100 : 0}%; right: ${absoluteMax > absoluteMin ? 100 - ((priceMax - absoluteMin) / (absoluteMax - absoluteMin)) * 100 : 0}%`"></div>
+                            
+                            <!-- Thumbs -->
+                            <input type="range" name="price_min" :min="absoluteMin" :max="absoluteMax" step="10000" x-model="priceMin" @input="priceMin = Math.min(priceMin, priceMax)" 
+                                   class="absolute w-full h-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-gray-900 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-grab [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-gray-900 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:shadow-md [&::-moz-range-thumb]:cursor-grab z-10">
+                                   
+                            <input type="range" name="price_max" :min="absoluteMin" :max="absoluteMax" step="10000" x-model="priceMax" @input="priceMax = Math.max(priceMax, priceMin)" 
+                                   class="absolute w-full h-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-gray-900 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-grab [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-gray-900 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:shadow-md [&::-moz-range-thumb]:cursor-grab z-20">
+                        </div>
                     </div>
 
-                    <hr class="border-gray-100 my-2">
+                    <hr class="border-gray-100 my-4">
 
                     {{-- Color Filter --}}
                     @if($allColors->count() > 0)
-                    <div class="space-y-3">
-                        <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wider">Màu sắc</h4>
-                        <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    <div class="space-y-4">
+                        <h4 class="text-sm font-semibold text-gray-900 uppercase tracking-wider">Màu sắc</h4>
+                        <div class="space-y-3 max-h-56 overflow-y-auto pr-2 custom-scrollbar">
                             @foreach($allColors as $color)
                             <label class="flex items-center gap-3 cursor-pointer group">
-                                <input type="checkbox" name="colors[]" value="{{ $color->id }}" {{ in_array($color->id, (array) request('colors', [])) ? 'checked' : '' }} class="rounded border-gray-300 text-brand focus:ring-brand cursor-pointer w-4 h-4">
+                                <div class="relative flex items-center justify-center">
+                                    <input type="checkbox" name="colors[]" value="{{ $color->id }}" {{ in_array($color->id, (array) request('colors', [])) ? 'checked' : '' }} class="peer sr-only">
+                                    <div class="w-5 h-5 rounded border border-gray-300 peer-checked:bg-gray-900 peer-checked:border-gray-900 transition-colors flex items-center justify-center">
+                                        <i class="bi bi-check text-white text-sm opacity-0 peer-checked:opacity-100"></i>
+                                    </div>
+                                </div>
                                 <span class="w-5 h-5 rounded-full border border-gray-200 shadow-sm shrink-0" style="background-color: {{ $color->hex_code ?? '#cccccc' }}"></span>
-                                <span class="text-sm text-gray-700 group-hover:text-brand transition-colors">{{ $color->name }}</span>
+                                <span class="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors">{{ $color->name }}</span>
                             </label>
                             @endforeach
                         </div>
                     </div>
-                    <hr class="border-gray-100 my-2">
+                    <hr class="border-gray-100 my-4">
                     @endif
 
                     {{-- Size Filter --}}
                     @if($allSizes->count() > 0)
-                    <div class="space-y-3">
-                        <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wider">Kích thước</h4>
+                    <div class="space-y-4">
+                        <h4 class="text-sm font-semibold text-gray-900 uppercase tracking-wider">Kích thước</h4>
                         <div class="flex flex-wrap gap-2">
                             @foreach($allSizes as $size)
                             <label for="size_cat_{{ $size->id }}" class="cursor-pointer">
                                 <input type="checkbox" name="sizes[]" id="size_cat_{{ $size->id }}" value="{{ $size->id }}" {{ in_array($size->id, (array) request('sizes', [])) ? 'checked' : '' }} class="sr-only peer">
-                                <span class="inline-flex items-center justify-center min-w-[42px] h-9 px-3 border-2 rounded-lg text-sm font-bold border-gray-200 text-gray-600 hover:border-brand hover:text-brand peer-checked:border-brand peer-checked:bg-brand peer-checked:text-white cursor-pointer">
+                                <span class="inline-flex items-center justify-center min-w-[44px] h-10 px-3 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 transition-all peer-checked:border-gray-900 peer-checked:bg-gray-900 peer-checked:text-white hover:border-gray-900 hover:text-gray-900">
                                     {{ $size->name }}
                                 </span>
                             </label>
                             @endforeach
                         </div>
                     </div>
-                    <hr class="border-gray-100 my-2">
+                    <hr class="border-gray-100 my-4">
                     @endif
 
                     <button type="submit" class="w-full bg-gray-900 text-white font-bold py-3 rounded-xl hover:bg-brand transition-colors text-sm uppercase tracking-wide">
