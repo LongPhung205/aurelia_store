@@ -1,35 +1,15 @@
 @extends('admin.layouts.admin')
 
 @section('title', 'Quản lý Danh mục')
+@section('page_title', 'Danh mục Sản phẩm')
 
 @section('content')
-<div class="px-0 w-full h-[calc(100vh-90px)] flex flex-col">
-    <!-- Header & Breadcrumb -->
-    <div class="flex justify-between items-center mb-6 shrink-0">
-        <div>
-            <h4 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Quản lý Danh Mục</h4>
-            <nav class="flex" aria-label="Breadcrumb">
-                <ol class="inline-flex items-center space-x-1 md:space-x-3">
-                    <li class="inline-flex items-center">
-                        <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
-                            Bảng điều khiển
-                        </a>
-                    </li>
-                    <li aria-current="page">
-                        <div class="flex items-center">
-                            <i class="bi bi-chevron-right text-gray-400 mx-1"></i>
-                            <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2 dark:text-gray-400">Danh mục</span>
-                        </div>
-                    </li>
-                </ol>
-            </nav>
-        </div>
-    </div>
+<div class="w-full h-[calc(100vh-90px)] flex flex-col">
 
     @if (isset($errors) && $errors->any())
-        <div class="mb-4 p-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400 shrink-0" role="alert">
-            <div class="font-medium mb-1"><i class="bi bi-exclamation-triangle-fill mr-2"></i>Đã có lỗi xảy ra:</div>
-            <ul class="list-disc pl-5">
+        <div class="mb-4 p-4 text-sm text-red-800 rounded-xl bg-red-50 ring-1 ring-red-100 dark:bg-red-900/20 dark:text-red-400 dark:ring-red-900/30 shrink-0 shadow-sm" role="alert">
+            <div class="font-bold mb-1 flex items-center gap-2"><i class="bi bi-exclamation-triangle-fill"></i> Đã có lỗi xảy ra:</div>
+            <ul class="list-disc pl-8 font-medium">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
@@ -37,27 +17,31 @@
         </div>
     @endif
 
-    <x-admin.card class="flex-1 flex flex-col min-h-0 border-0 shadow-sm" bodyClass="flex-1 flex flex-col min-h-0" noPadding="true">
-        <div class="p-4 border-b border-gray-200 dark:border-gray-700 shrink-0 flex justify-between items-center bg-white dark:bg-gray-800 rounded-t-lg">
-            <h5 class="mb-0 font-semibold text-blue-600 dark:text-blue-400"><i class="bi bi-folder2 mr-2"></i>Tất cả danh mục</h5>
-            <x-admin.button type="button" variant="primary" size="sm" icon="bi bi-plus-circle" data-modal-target="createModal" data-modal-toggle="createModal">
+    <x-admin.card noPadding="true" title="Danh sách Danh mục" icon="bi bi-folder2-open" class="flex-1 flex flex-col min-h-0" bodyClass="flex-1 flex flex-col min-h-0">
+        
+        <!-- Header Actions -->
+        <div class="p-4 border-b border-gray-100 dark:border-white/10 shrink-0 flex justify-between items-center bg-gray-50/50 dark:bg-[#0a0a0a]">
+            <div class="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Quản lý cây danh mục đa cấp
+            </div>
+            <x-admin.button type="button" variant="primary" icon="bi bi-plus-lg" data-modal-target="createModal" data-modal-toggle="createModal" class="shadow-sm">
                 Thêm Mới
             </x-admin.button>
         </div>
         
-        <div class="overflow-auto flex-1 relative">
-            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 sticky top-0 z-10 shadow-[0_1px_2px_rgba(0,0,0,0.1)]">
+        <div class="overflow-auto flex-1 relative shadow-inner">
+            <table class="w-full text-sm text-left text-gray-600 dark:text-gray-400">
+                <thead class="text-xs font-semibold text-gray-500 uppercase bg-gray-50 dark:bg-[#111] dark:text-gray-400 sticky top-0 z-10 shadow-[0_1px_2px_rgba(0,0,0,0.05)] border-b border-gray-200 dark:border-white/10">
                     <tr>
-                        <th scope="col" class="px-6 py-3 font-semibold">ID</th>
-                        <th scope="col" class="px-6 py-3 font-semibold text-center">Ảnh</th>
-                        <th scope="col" class="px-6 py-3 font-semibold">Tên danh mục</th>
-                        <th scope="col" class="px-6 py-3 font-semibold">Đường dẫn (Slug)</th>
-                        <th scope="col" class="px-6 py-3 font-semibold text-center">Trạng thái</th>
-                        <th scope="col" class="px-6 py-3 font-semibold text-right">Thao tác</th>
+                        <th scope="col" class="px-6 py-4 w-20">ID</th>
+                        <th scope="col" class="px-6 py-4 w-24 text-center">Ảnh</th>
+                        <th scope="col" class="px-6 py-4">Tên danh mục</th>
+                        <th scope="col" class="px-6 py-4 w-48">Đường dẫn (Slug)</th>
+                        <th scope="col" class="px-6 py-4 w-32 text-center">Trạng thái</th>
+                        <th scope="col" class="px-6 py-4 w-32 text-right">Thao tác</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-gray-100 dark:divide-white/5">
                     @forelse($categories as $category)
                         @include('admin.categories.partials.category_row', ['category' => $category, 'level' => 0])
                     @empty

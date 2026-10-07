@@ -32,5 +32,8 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="PAYOS_CLIENT_ID" value="test-client-id"/>
+        <env name="PAYOS_API_KEY" value="test-api-key"/>
+        <env name="PAYOS_CHECKSUM_KEY" value="test-checksum-key-1234567890abcdef"/>
     </php>
 </phpunit>

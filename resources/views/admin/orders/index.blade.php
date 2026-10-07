@@ -63,11 +63,40 @@
             </form>
         </div>
 
+        <!-- Bulk Action Bar -->
+        <div id="bulkActionBar" class="hidden px-4 py-3 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800 flex flex-col md:flex-row items-center justify-between shrink-0 transition-all duration-300">
+            <div class="flex items-center gap-3 mb-2 md:mb-0">
+                <span class="text-sm font-bold text-blue-700 dark:text-blue-400">Đã chọn <span id="selectedCount">0</span> đơn hàng</span>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap justify-end">
+                <form id="bulkActionForm" action="{{ route('admin.orders.bulk_action') }}" method="POST" class="m-0 flex gap-2 flex-wrap">
+                    @csrf
+                    <input type="hidden" name="action" id="bulkActionInput" value="">
+                    
+                    <button type="button" onclick="submitBulk('processing')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded shadow-sm flex items-center gap-1.5 transition-colors">
+                        <i class="bi bi-check-circle"></i> Xác nhận hàng loạt
+                    </button>
+                    <button type="button" onclick="submitBulk('push_ghn')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded shadow-sm flex items-center gap-1.5 transition-colors">
+                        <i class="bi bi-truck"></i> Gửi GHN hàng loạt
+                    </button>
+                    <button type="button" onclick="submitBulk('ready_to_pick')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded shadow-sm flex items-center gap-1.5 transition-colors">
+                        <i class="bi bi-box-seam"></i> Đóng gói xong
+                    </button>
+                    <button type="button" onclick="submitBulk('print')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded shadow-sm flex items-center gap-1.5 transition-colors">
+                        <i class="bi bi-printer"></i> In Tem GHN
+                    </button>
+                </form>
+            </div>
+        </div>
+
         <!-- Orders Table -->
         <div class="overflow-auto flex-1 relative shadow-inner">
             <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400 relative">
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 sticky top-0 z-10 shadow-[0_1px_2px_rgba(0,0,0,0.1)]">
                     <tr>
+                        <th class="px-4 py-3 w-10 text-center">
+                            <input type="checkbox" id="selectAllCheckbox" class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 cursor-pointer">
+                        </th>
                         <th class="px-6 py-3">Đơn hàng</th>
                         <th class="px-6 py-3">Khách hàng</th>
                         <th class="px-6 py-3">Tổng tiền</th>
@@ -79,6 +108,10 @@
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                     @forelse($orders as $order)
                         <tr class="bg-white hover:bg-slate-50 dark:bg-gray-800 dark:hover:bg-gray-700/50 transition-colors">
+                            <!-- Checkbox -->
+                            <td class="px-4 py-4 text-center">
+                                <input type="checkbox" value="{{ $order->id }}" class="order-checkbox w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 cursor-pointer">
+                            </td>
                             <!-- Order ID -->
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <a href="{{ route('admin.orders.show', $order) }}" class="font-bold text-primary-600 dark:text-primary-400 hover:underline text-base">
@@ -219,7 +252,86 @@
             {{ $orders->links() }}
         </div>
         @endif
+        
+        <iframe name="print_frame" id="print_frame" class="hidden"></iframe>
 
     </x-admin.card>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectAll = document.getElementById('selectAllCheckbox');
+        const checkboxes = document.querySelectorAll('.order-checkbox');
+        const actionBar = document.getElementById('bulkActionBar');
+        const selectedCount = document.getElementById('selectedCount');
+        const bulkForm = document.getElementById('bulkActionForm');
+
+        function updateActionBar() {
+            const checked = document.querySelectorAll('.order-checkbox:checked');
+            if(selectedCount) selectedCount.textContent = checked.length;
+            
+            if (checked.length > 0) {
+                if(actionBar) actionBar.classList.remove('hidden');
+            } else {
+                if(actionBar) actionBar.classList.add('hidden');
+                if(selectAll) selectAll.checked = false;
+            }
+        }
+
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                checkboxes.forEach(cb => cb.checked = this.checked);
+                updateActionBar();
+            });
+        }
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', function() {
+                updateActionBar();
+                if (!this.checked && selectAll) selectAll.checked = false;
+            });
+        });
+
+        window.submitBulk = function(action) {
+            const checked = document.querySelectorAll('.order-checkbox:checked');
+            if (checked.length === 0) return;
+            
+            if (action === 'print') {
+                bulkForm.action = "{{ route('admin.orders.bulk_print') }}";
+                bulkForm.target = "print_frame"; // Gửi qua iframe ẩn để in trực tiếp
+            } else {
+                bulkForm.action = "{{ route('admin.orders.bulk_action') }}";
+                bulkForm.target = "_self";
+                
+                let actionName = action;
+                if(action === 'processing') actionName = 'Xác nhận đơn';
+                if(action === 'push_ghn') actionName = 'Gửi GHN';
+                if(action === 'ready_to_pick') actionName = 'Báo đóng gói xong';
+
+                if (!confirm('Bạn có chắc chắn muốn thực hiện thao tác [' + actionName + '] cho ' + checked.length + ' đơn hàng đã chọn?')) {
+                    return;
+                }
+            }
+
+            document.getElementById('bulkActionInput').value = action;
+            
+            // Xóa các input cũ
+            bulkForm.querySelectorAll('.hidden-id-input').forEach(el => el.remove());
+            
+            // Append input ẩn
+            checked.forEach(cb => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'order_ids[]';
+                input.value = cb.value;
+                input.className = 'hidden-id-input';
+                bulkForm.appendChild(input);
+            });
+
+            bulkForm.submit();
+        }
+    });
+</script>
+@endpush

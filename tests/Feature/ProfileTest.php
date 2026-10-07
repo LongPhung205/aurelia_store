@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Models\UserAddress;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class ProfileTest extends TestCase
@@ -27,9 +29,11 @@ class ProfileTest extends TestCase
 
         $response = $this
             ->actingAs($user)
-            ->patch('/profile', [
-                'name' => 'Test User',
-                'email' => 'test@example.com',
+            ->from('/profile')
+            ->post('/profile/update', [
+                'name' => 'Updated Name',
+                'email' => 'updated@example.com',
+                'phone' => '0987654321',
             ]);
 
         $response
@@ -38,62 +42,93 @@ class ProfileTest extends TestCase
 
         $user->refresh();
 
-        $this->assertSame('Test User', $user->name);
-        $this->assertSame('test@example.com', $user->email);
-        $this->assertNull($user->email_verified_at);
+        $this->assertSame('Updated Name', $user->name);
+        $this->assertSame('updated@example.com', $user->email);
+        $this->assertSame('0987654321', $user->phone);
     }
 
-    public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
+    public function test_profile_password_page_is_displayed(): void
     {
         $user = User::factory()->create();
 
         $response = $this
             ->actingAs($user)
-            ->patch('/profile', [
-                'name' => 'Test User',
-                'email' => $user->email,
+            ->get('/profile/password');
+
+        $response->assertOk();
+    }
+
+    public function test_password_can_be_updated_via_profile(): void
+    {
+        $user = User::factory()->create([
+            'password' => Hash::make('old-password-123'),
+        ]);
+
+        $response = $this
+            ->actingAs($user)
+            ->from('/profile/password')
+            ->post('/profile/password/update', [
+                'current_password' => 'old-password-123',
+                'password' => 'new-password-456',
+                'password_confirmation' => 'new-password-456',
             ]);
 
         $response
             ->assertSessionHasNoErrors()
-            ->assertRedirect('/profile');
+            ->assertRedirect('/profile/password');
 
-        $this->assertNotNull($user->refresh()->email_verified_at);
+        $this->assertTrue(Hash::check('new-password-456', $user->refresh()->password));
     }
 
-    public function test_user_can_delete_their_account(): void
+    public function test_password_cannot_be_updated_with_incorrect_current_password(): void
+    {
+        $user = User::factory()->create([
+            'password' => Hash::make('correct-password'),
+        ]);
+
+        $response = $this
+            ->actingAs($user)
+            ->from('/profile/password')
+            ->post('/profile/password/update', [
+                'current_password' => 'wrong-password',
+                'password' => 'new-password-456',
+                'password_confirmation' => 'new-password-456',
+            ]);
+
+        $response
+            ->assertSessionHasErrors('current_password')
+            ->assertRedirect('/profile/password');
+
+        $this->assertTrue(Hash::check('correct-password', $user->refresh()->password));
+    }
+
+    public function test_user_can_add_and_delete_address(): void
     {
         $user = User::factory()->create();
 
         $response = $this
             ->actingAs($user)
-            ->delete('/profile', [
-                'password' => 'password',
+            ->from('/profile/addresses')
+            ->post('/profile/addresses', [
+                'name' => 'Nguyen Van A',
+                'phone' => '0912345678',
+                'province_id' => '201',
+                'district_id' => '1482',
+                'ward_code' => '11007',
+                'address' => '123 Le Loi Street',
             ]);
 
-        $response
-            ->assertSessionHasNoErrors()
-            ->assertRedirect('/');
+        $response->assertSessionHasNoErrors();
 
-        $this->assertGuest();
-        $this->assertNull($user->fresh());
-    }
+        $address = UserAddress::where('user_id', $user->id)->first();
+        $this->assertNotNull($address);
+        $this->assertSame('123 Le Loi Street', $address->address);
 
-    public function test_correct_password_must_be_provided_to_delete_account(): void
-    {
-        $user = User::factory()->create();
-
-        $response = $this
+        $deleteResponse = $this
             ->actingAs($user)
-            ->from('/profile')
-            ->delete('/profile', [
-                'password' => 'wrong-password',
-            ]);
+            ->delete("/profile/addresses/{$address->id}");
 
-        $response
-            ->assertSessionHasErrorsIn('userDeletion', 'password')
-            ->assertRedirect('/profile');
-
-        $this->assertNotNull($user->fresh());
+        $deleteResponse->assertSessionHasNoErrors();
+        $this->assertDatabaseMissing('user_addresses', ['id' => $address->id]);
     }
 }

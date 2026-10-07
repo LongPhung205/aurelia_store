@@ -71,12 +71,58 @@
             <!-- Right utilities -->
             <div class="flex items-center gap-4 lg:gap-6">
                 <!-- Search Bar (Hidden on very small screens) -->
-                <div class="hidden md:flex relative group">
-                    <input type="text" class="w-48 lg:w-64 pl-4 pr-10 py-2 border border-gray-200 rounded-full text-sm focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand placeholder-gray-400 transition-all" placeholder="Tìm kiếm sản phẩm...">
-                    <button class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand transition-colors">
+                <form action="{{ route('search') }}" method="GET" class="hidden md:flex relative group" 
+                      x-data="{ query: '{{ request('q') }}', results: [], loading: false, show: false, searchTimeout: null }"
+                      @click.away="show = false">
+                    <input type="text" name="q" x-model="query" 
+                           @input="
+                                clearTimeout(searchTimeout); 
+                                if (query.length < 2) { results = []; show = false; return; }
+                                show = true;
+                                loading = true;
+                                searchTimeout = setTimeout(() => {
+                                    fetch('{{ route('api.search') }}?q=' + encodeURIComponent(query))
+                                        .then(res => res.json())
+                                        .then(data => { results = data; loading = false; })
+                                }, 300);
+                           "
+                           @focus="if(query.length >= 2) show = true"
+                           class="w-48 lg:w-64 pl-4 pr-10 py-2 border border-gray-200 rounded-full text-sm focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand placeholder-gray-400 transition-all" 
+                           placeholder="Tìm kiếm sản phẩm..." autocomplete="off">
+                    <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand transition-colors">
                         <i class="bi bi-search"></i>
                     </button>
-                </div>
+
+                    <!-- Search Dropdown -->
+                    <div x-show="show" x-transition.opacity.duration.200ms style="display: none;" 
+                         class="absolute top-full right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden">
+                        <div x-show="loading" class="p-4 text-center text-sm text-gray-500">
+                            <i class="bi bi-arrow-repeat inline-block animate-spin mr-2"></i>Đang tìm kiếm...
+                        </div>
+                        
+                        <div x-show="!loading && results.length === 0 && query.length >= 2" class="p-4 text-center text-sm text-gray-500">
+                            Không tìm thấy sản phẩm nào.
+                        </div>
+
+                        <ul x-show="!loading && results.length > 0" class="max-h-[70vh] overflow-y-auto">
+                            <template x-for="product in results" :key="product.id">
+                                <li>
+                                    <a :href="product.url" class="flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0">
+                                        <img :src="product.image_url" :alt="product.name" class="w-12 h-12 object-cover rounded-md border border-gray-100 shrink-0">
+                                        <div class="min-w-0 flex-1">
+                                            <h4 class="text-sm font-medium text-gray-900 truncate" x-text="product.name"></h4>
+                                            <p class="text-brand font-bold text-sm mt-0.5" x-text="product.price_formatted"></p>
+                                        </div>
+                                    </a>
+                                </li>
+                            </template>
+                        </ul>
+                        
+                        <div x-show="!loading && results.length > 0" class="p-2 border-t border-gray-100 bg-gray-50 text-center">
+                            <button type="submit" class="text-xs font-medium text-brand hover:text-brand/80 transition-colors">Xem tất cả kết quả</button>
+                        </div>
+                    </div>
+                </form>
                 
                 <!-- Search Icon for Mobile -->
                 <button class="md:hidden text-gray-600 hover:text-brand transition-colors text-lg">

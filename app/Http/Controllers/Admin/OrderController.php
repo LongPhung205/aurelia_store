@@ -189,4 +189,126 @@ class OrderController extends Controller
         \Illuminate\Support\Facades\Log::error('Create GHN Order Error: ' . $ghnResponse['message']);
         return redirect()->back()->with('error', 'Lỗi khi tạo đơn GHN: ' . $ghnResponse['message']);
     }
+
+    public function bulkAction(Request $request, InventoryService $inventoryService, GhnService $ghnService)
+    {
+        $action = $request->input('action');
+        $orderIds = $request->input('order_ids', []);
+
+        if (empty($orderIds)) {
+            return redirect()->back()->with('error', 'Vui lòng chọn ít nhất 1 đơn hàng.');
+        }
+
+        $orders = Order::whereIn('id', $orderIds)->get();
+        $successCount = 0;
+        $errorMessages = [];
+
+        foreach ($orders as $order) {
+            try {
+                DB::transaction(function () use ($order, $action, $inventoryService, $ghnService) {
+                    if ($action === 'processing' && $order->status === 'pending') {
+                        $order->update(['status' => 'processing']);
+                    } 
+                    elseif ($action === 'ready_to_pick') {
+                        if (!in_array($order->status, ['shipping', 'completed', 'cancelled'])) {
+                            $order->update(['status' => 'ready_to_pick']);
+                        }
+                    } 
+                    elseif ($action === 'push_ghn') {
+                        if (!$order->shipping_order_code) {
+                            $ghnItems = [];
+                            foreach ($order->items as $item) {
+                                $ghnItems[] = [
+                                    'name' => $item->product_name,
+                                    'quantity' => $item->quantity,
+                                    'price' => (int)$item->price,
+                                    'weight' => 200
+                                ];
+                            }
+                            $ghnOrderData = [
+                                'payment_type_id' => 2,
+                                'required_note' => 'CHOXEMHANGKHONGTHU',
+                                'return_phone' => '0339999999',
+                                'return_address' => 'Hà Nội',
+                                'return_district_id' => (int)config('services.ghn.from_district_id'),
+                                'return_ward_code' => (string)config('services.ghn.from_ward_code'),
+                                'client_order_code' => 'ORD-' . $order->id,
+                                'to_name' => $order->customer_name,
+                                'to_phone' => $order->customer_phone,
+                                'to_address' => $order->address,
+                                'to_ward_code' => (string)$order->ward_code,
+                                'to_district_id' => (int)$order->district_id,
+                                'cod_amount' => (int)$order->total_amount,
+                                'content' => 'Sản phẩm thời trang',
+                                'weight' => count($ghnItems) * 200,
+                                'length' => 20,
+                                'width' => 20,
+                                'height' => 10,
+                                'service_id' => 53320,
+                                'service_type_id' => 2,
+                                'items' => $ghnItems
+                            ];
+                            $ghnResponse = $ghnService->createOrder($ghnOrderData);
+                            if ($ghnResponse['success']) {
+                                $order->update([
+                                    'shipping_order_code' => $ghnResponse['order_code'],
+                                    'shipping_status' => 'ready_to_pick',
+                                    'status' => 'ready_to_pick'
+                                ]);
+                            } else {
+                                throw new \Exception('Lỗi GHN đơn ' . $order->id . ': ' . $ghnResponse['message']);
+                            }
+                        }
+                    }
+                });
+                $successCount++;
+            } catch (\Exception $e) {
+                $errorMessages[] = $e->getMessage();
+            }
+        }
+
+        $msg = "Đã xử lý thành công $successCount đơn hàng.";
+        if (count($errorMessages) > 0) {
+            $msg .= " Có lỗi: " . implode('; ', $errorMessages);
+            return redirect()->back()->with('warning', $msg);
+        }
+
+        return redirect()->back()->with('success', $msg);
+    }
+
+    public function bulkPrint(Request $request, GhnService $ghnService)
+    {
+        $orderIds = $request->input('order_ids', []);
+        
+        if (empty($orderIds)) {
+            return redirect()->back()->with('error', 'Vui lòng chọn ít nhất 1 đơn hàng để in.');
+        }
+
+        $orders = Order::with(['items.productVariant.product', 'items.productVariant.color', 'items.productVariant.size'])
+                       ->whereIn('id', $orderIds)
+                       ->get();
+
+        // Resolve addresses for all orders
+        foreach ($orders as $order) {
+            $provinceName = '';
+            $districtName = '';
+            $wardName = '';
+            
+            if ($order->province_id) {
+                $p = collect($ghnService->getProvinces())->firstWhere('ProvinceID', $order->province_id);
+                $provinceName = $p ? $p['ProvinceName'] : '';
+            }
+            if ($order->district_id) {
+                $d = collect($ghnService->getDistricts($order->province_id))->firstWhere('DistrictID', $order->district_id);
+                $districtName = $d ? $d['DistrictName'] : '';
+            }
+            if ($order->ward_code) {
+                $w = collect($ghnService->getWards($order->district_id))->firstWhere('WardCode', $order->ward_code);
+                $wardName = $w ? $w['WardName'] : '';
+            }
+            $order->ghnAddressStr = collect([$wardName, $districtName, $provinceName])->filter()->implode(', ');
+        }
+
+        return view('admin.orders.bulk_print', compact('orders'));
+    }
 }

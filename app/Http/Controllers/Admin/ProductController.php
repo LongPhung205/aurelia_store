@@ -108,6 +108,10 @@ class ProductController extends Controller
                     'material' => $data['material'] ?? null,
                     'status' => $data['status'],
                 ]);
+                
+                if (!empty($data['material'])) {
+                    \App\Models\Material::firstOrCreate(['name' => trim($data['material'])]);
+                }
 
                 $product->categories()->sync($data['category_ids']);
 
@@ -176,6 +180,10 @@ class ProductController extends Controller
                     'material' => $data['material'] ?? null,
                     'status' => $data['status'],
                 ]);
+
+                if (!empty($data['material'])) {
+                    \App\Models\Material::firstOrCreate(['name' => trim($data['material'])]);
+                }
 
                 $product->categories()->sync($data['category_ids']);
 

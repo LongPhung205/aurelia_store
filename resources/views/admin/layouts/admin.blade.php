@@ -11,7 +11,7 @@
     <link href="{{ asset('vendor/bootstrap-icons/font/bootstrap-icons.css') }}" rel="stylesheet">
     <!-- Google Material Symbols & Fonts -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
     
     <style>
         .material-symbols-outlined {
@@ -20,7 +20,9 @@
         }
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6; /* Tailwind gray-100 */
+            background-color: #f9fafb; /* gray-50 */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         
         /* Modal Backdrop Blur */
@@ -88,7 +90,7 @@
         }
     </script>
 </head>
-<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-200">
+<body class="bg-gray-50 text-gray-900 antialiased dark:bg-slate-900 dark:text-gray-100 transition-colors duration-200 tracking-tight">
 
     <!-- Top Navbar -->
     <nav class="fixed top-0 right-0 z-30 w-full sm:w-[calc(100%-272px)] bg-transparent sm:bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
@@ -100,8 +102,44 @@
                         <span class="sr-only">Open sidebar</span>
                         <i class="bi bi-list text-2xl"></i>
                     </button>
-                    <!-- Page Title (Optional placeholder for future use) -->
-                    <span class="hidden sm:block text-slate-800 dark:text-white font-semibold ms-3 text-lg">@yield('page_title', 'Tổng quan')</span>
+                    <!-- Page Title / Breadcrumbs -->
+                    <div class="hidden sm:block ms-3">
+                        @php
+                            $routeName = request()->route() ? request()->route()->getName() : '';
+                            $breadcrumbGroup = 'Tổng quan';
+                            
+                            if (Str::startsWith($routeName, ['admin.products', 'admin.categories', 'admin.attributes', 'admin.colors', 'admin.sizes', 'admin.materials'])) {
+                                $breadcrumbGroup = 'Product Manager';
+                            } elseif (Str::startsWith($routeName, ['admin.imports', 'admin.inventory'])) {
+                                $breadcrumbGroup = 'Warehouse & Inventory';
+                            } elseif (Str::startsWith($routeName, ['admin.orders'])) {
+                                $breadcrumbGroup = 'Orders & Fulfillment';
+                            } elseif (Str::startsWith($routeName, ['admin.finance', 'admin.transactions'])) {
+                                $breadcrumbGroup = 'Finance & Cashflow';
+                            } elseif (Str::startsWith($routeName, ['admin.banners', 'admin.coupons', 'admin.flash_sales', 'admin.posts'])) {
+                                $breadcrumbGroup = 'Marketing & Promotion';
+                            } elseif (Str::startsWith($routeName, ['admin.users', 'admin.settings'])) {
+                                $breadcrumbGroup = 'System Settings';
+                            }
+                        @endphp
+                        <nav class="flex" aria-label="Breadcrumb">
+                            <ol class="inline-flex items-center space-x-1 md:space-x-2">
+                                <li class="inline-flex items-center">
+                                    <span class="inline-flex items-center text-sm font-medium text-slate-500 dark:text-slate-400">
+                                        {{ $breadcrumbGroup }}
+                                    </span>
+                                </li>
+                                @if(View::hasSection('title') && View::getSection('title') !== 'Admin Dashboard' && View::getSection('title') !== 'Dashboard')
+                                <li aria-current="page">
+                                    <div class="flex items-center">
+                                        <i class="bi bi-chevron-right text-slate-400 mx-1 text-[10px]"></i>
+                                        <span class="ml-1 text-base font-semibold text-slate-800 md:ml-2 dark:text-white tracking-tight">@yield('title')</span>
+                                    </div>
+                                </li>
+                                @endif
+                            </ol>
+                        </nav>
+                    </div>
                 </div>
                 <div class="flex items-center">
                     <!-- Notifications Dropdown -->
@@ -289,14 +327,7 @@
                         </a>
                     </li>
 
-                    <li>
-                        <a href="#" class="flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-200 font-normal">
-                            <div class="flex items-center gap-3 text-sm">
-                                <i class="bi bi-bell text-base text-slate-400 dark:text-slate-500 group-hover:text-slate-500 dark:group-hover:text-slate-400"></i>
-                                <span>Notifications</span>
-                            </div>
-                        </a>
-                    </li>
+
 
                     <li>
                         <a href="{{ route('admin.analytics.index') }}" class="flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-200 group {{ request()->routeIs('admin.analytics.*') ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-200 font-normal' }}">
@@ -379,15 +410,7 @@
                                 </div>
                             </a>
                         </li>
-                        <li>
-                            <a href="#" class="flex items-center justify-between px-3 py-2 pl-9 text-sm rounded-lg transition-colors text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50">
-                                <div class="flex items-center gap-3">
-                                    <i class="bi bi-truck text-base text-slate-400"></i>
-                                    <span>Shipping</span>
-                                </div>
-                                <span class="text-[10px] text-slate-400">+</span>
-                            </a>
-                        </li>
+
                     </ul>
                 </div>
 

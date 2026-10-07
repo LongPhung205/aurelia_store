@@ -110,7 +110,11 @@ class ClientChatController extends Controller
 
         $conversation->touch();
 
-        broadcast(new MessageSent($message->load('user')))->toOthers();
+        try {
+            broadcast(new MessageSent($message->load('user')))->toOthers();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('ClientChatController broadcast error: ' . $e->getMessage());
+        }
 
         // Notify Admins
         try {

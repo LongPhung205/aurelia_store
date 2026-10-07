@@ -42,27 +42,43 @@
 <!-- Danh mục mức 2 -->
 @if(isset($homeCategories) && $homeCategories->count() > 0)
 <section class="mb-12 mt-12 md:mt-16">
-    <div class="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-12 md:gap-y-16">
-        @foreach($homeCategories as $category)
-        <a href="{{ route('categories.show', $category->slug) }}" class="group relative bg-[#f4f6f8] rounded-xl flex items-center p-5 md:p-8 hover:shadow-lg transition-all duration-300 h-28 md:h-36">
-            <!-- Tên danh mục -->
-            <span class="font-bold text-gray-800 uppercase tracking-wide group-hover:text-brand transition-colors relative z-10 text-sm md:text-lg w-1/2 md:w-3/5 break-words">
-                {{ $category->name }}
-            </span>
-            
-            <!-- Ảnh nổi lên -->
-            <div class="absolute right-2 md:right-6 bottom-0 w-24 h-32 md:w-32 md:h-44 bg-white rounded-t-xl md:rounded-xl shadow-[0_-4px_15px_-3px_rgba(0,0,0,0.1)] md:shadow-lg shrink-0 z-20 transition-transform duration-500 group-hover:-translate-y-3 p-2 flex items-center justify-center">
-                @if($category->image)
+    <div class="relative group/carousel" x-data="{ 
+            scrollLeft() { this.$refs.slider.scrollBy({ left: -300, behavior: 'smooth' }); }, 
+            scrollRight() { this.$refs.slider.scrollBy({ left: 300, behavior: 'smooth' }); } 
+        }">
+        <!-- Prev Button -->
+        <button @click="scrollLeft()" class="absolute -left-5 top-1/2 -translate-y-1/2 z-30 w-10 h-10 bg-white rounded-full shadow-[0_2px_10px_rgba(0,0,0,0.1)] flex items-center justify-center text-gray-600 hover:text-brand hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100 hidden md:flex">
+            <i class="bi bi-chevron-left"></i>
+        </button>
+        
+        <div x-ref="slider" class="flex overflow-x-auto snap-x snap-mandatory gap-4 md:gap-6 pb-6 pt-12 -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth" style="scrollbar-width: none;">
+            @foreach($homeCategories as $category)
+            <a href="{{ route('categories.show', $category->slug) }}" class="flex-none w-[75vw] sm:w-[320px] snap-start group relative bg-[#f4f6f8] rounded-xl flex items-center p-5 md:p-8 hover:shadow-lg transition-all duration-300 h-28 md:h-36">
+                <!-- Tên danh mục -->
+                <span class="font-bold text-gray-800 uppercase tracking-wide group-hover:text-brand transition-colors relative z-10 text-sm md:text-lg w-1/2 md:w-3/5 break-words">
+                    {{ $category->name }}
+                </span>
+                
+                <!-- Ảnh nổi lên -->
+                <div class="absolute right-2 md:right-6 bottom-0 w-24 h-32 md:w-32 md:h-44 bg-white rounded-t-xl md:rounded-xl shadow-[0_-4px_15px_-3px_rgba(0,0,0,0.1)] md:shadow-lg shrink-0 z-20 transition-transform duration-500 group-hover:-translate-y-3 p-2 flex items-center justify-center">
                     <img src="{{ Storage::url($category->image) }}" alt="{{ $category->name }}" class="max-w-full max-h-full object-contain">
-                @else
-                    <div class="w-12 h-12 md:w-16 md:h-16 bg-gray-100 rounded-full flex items-center justify-center text-gray-400">
-                        <i class="bi bi-image text-xl"></i>
-                    </div>
-                @endif
-            </div>
-        </a>
-        @endforeach
+                </div>
+            </a>
+            @endforeach
+        </div>
+
+        <!-- Next Button -->
+        <button @click="scrollRight()" class="absolute -right-5 top-1/2 -translate-y-1/2 z-30 w-10 h-10 bg-white rounded-full shadow-[0_2px_10px_rgba(0,0,0,0.1)] flex items-center justify-center text-gray-600 hover:text-brand hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100 hidden md:flex">
+            <i class="bi bi-chevron-right"></i>
+        </button>
     </div>
+    
+    <style>
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .group\\/carousel .flex::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
 </section>
 @endif
 

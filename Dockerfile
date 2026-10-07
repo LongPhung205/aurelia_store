@@ -92,8 +92,13 @@ COPY --from=composer-build /app/vendor /var/www/html/vendor
 COPY --from=node-build /app/public/build /var/www/html/public/build
 
 # Set permissions and prepare runtime folders
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache \
+RUN mkdir -p /var/www/html/storage/framework/cache/data \
+             /var/www/html/storage/framework/sessions \
+             /var/www/html/storage/framework/views \
+             /var/www/html/storage/logs \
+             /var/www/html/bootstrap/cache \
+    && chown -R www-data:www-data /var/www/html \
+    && chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache \
     && mkdir -p /var/log/nginx /var/lib/nginx/tmp /run/app-certificates \
     && chown -R www-data:www-data /var/log/nginx /var/lib/nginx /run/app-certificates
 

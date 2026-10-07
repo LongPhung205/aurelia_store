@@ -1,5 +1,5 @@
 ---
-trigger: always_on
+trigger: manual
 description: Ensures the AI always commits and pushes code using the push-to-github skill after completing a task.
 ---
 

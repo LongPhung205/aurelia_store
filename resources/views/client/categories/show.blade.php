@@ -22,29 +22,36 @@
 @endpush
 @section('full_width_top')
 {{-- Category Banner --}}
-<section class="bg-gray-900 py-12 md:py-16 relative overflow-hidden mb-8">
+<section class="bg-gray-900 py-20 md:py-28 relative overflow-hidden mb-8">
     @php
         $heroBannerUrl = $category->hero_banner_url;
+        if (!$heroBannerUrl) {
+            $defaultBanner = \App\Models\Banner::where('type', 'category_header')->whereNull('category_id')->where('is_active', true)->orderBy('position')->first();
+            if ($defaultBanner) {
+                $heroBannerUrl = $defaultBanner->display_image_url;
+            }
+        }
     @endphp
     @if($heroBannerUrl)
         <div class="absolute inset-0">
-            <img src="{{ $heroBannerUrl }}" alt="{{ $category->name }}" class="w-full h-full object-cover opacity-40">
-            <div class="absolute inset-0 bg-gradient-to-b from-black/40 to-black/70"></div>
+            <img src="{{ $heroBannerUrl }}" alt="{{ $category->name }}" class="w-full h-full object-cover">
+            <!-- Chỉ dùng một lớp gradient rất mỏng từ dưới lên để đảm bảo chữ màu trắng vẫn đọc được -->
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
         </div>
     @endif
     <div class="container mx-auto px-4 relative z-10 text-center">
-        <nav class="flex justify-center mb-4 text-sm text-gray-400" aria-label="Breadcrumb">
+        <nav class="flex justify-center mb-4 text-sm text-gray-200 drop-shadow-md" aria-label="Breadcrumb">
             <ol class="inline-flex items-center space-x-2">
                 <li><a href="{{ url('/') }}" class="hover:text-white transition-colors">Trang chủ</a></li>
-                <li><i class="bi bi-chevron-right text-gray-500 mx-1 text-xs"></i></li>
+                <li><i class="bi bi-chevron-right text-white/50 mx-1 text-xs"></i></li>
                 @if($category->parent)
                     <li><a href="{{ route('categories.show', $category->parent->slug) }}" class="hover:text-white transition-colors">{{ $category->parent->name }}</a></li>
-                    <li><i class="bi bi-chevron-right text-gray-500 mx-1 text-xs"></i></li>
+                    <li><i class="bi bi-chevron-right text-white/50 mx-1 text-xs"></i></li>
                 @endif
                 <li class="text-white font-medium">{{ $category->name }}</li>
             </ol>
         </nav>
-        <h1 class="text-4xl md:text-5xl font-black text-white mb-3 tracking-tight">{{ $category->name }}</h1>
+        <h1 class="text-4xl md:text-5xl font-black text-white mb-3 tracking-tight drop-shadow-lg">{{ $category->name }}</h1>
     </div>
 </section>
 @endsection

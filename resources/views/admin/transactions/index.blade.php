@@ -122,7 +122,7 @@
                         <th class="px-4 py-3 font-semibold text-slate-700 dark:text-slate-300">Khách hàng</th>
                         <th class="px-4 py-3 font-semibold text-slate-700 dark:text-slate-300">Cổng thanh toán</th>
                         <th class="px-4 py-3 font-semibold text-slate-700 dark:text-slate-300">Số tiền</th>
-                        <th class="px-4 py-3 font-semibold text-slate-700 dark:text-slate-300">Trạng thái</th>
+                        <th class="px-4 py-3 font-semibold text-slate-700 dark:text-slate-300">Trạng thái Đơn & Giao dịch</th>
                         <th class="px-4 py-3 font-semibold text-slate-700 dark:text-slate-300">Thời gian & Đối soát</th>
                         <th class="px-4 py-3 font-semibold text-slate-700 dark:text-slate-300 text-right">Thao tác</th>
                     </tr>
@@ -165,19 +165,53 @@
                         </td>
 
                         <td class="px-4 py-3">
-                            @if($tx->status === 'success')
-                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">
-                                    <span class="material-symbols-outlined text-[15px] leading-none text-emerald-600">check_circle</span> Thành công
-                                </span>
-                            @elseif($tx->status === 'pending')
-                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800">
-                                    <span class="material-symbols-outlined text-[15px] leading-none text-amber-500">hourglass_top</span> Chờ thanh toán
-                                </span>
-                            @else
-                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-rose-50 text-rose-700 border border-rose-200/80 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800">
-                                    <span class="material-symbols-outlined text-[15px] leading-none text-rose-600">cancel</span> Thất bại / Hủy
-                                </span>
-                            @endif
+                            <div class="flex flex-col gap-2 items-start">
+                                @if($tx->order)
+                                    @php
+                                        $statusColors = [
+                                            'pending' => 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+                                            'processing' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+                                            'ready_to_pick' => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400',
+                                            'shipping' => 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+                                            'completed' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
+                                            'cancelled' => 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400',
+                                        ];
+                                        $statusLabels = [
+                                            'pending' => 'Chờ xác nhận',
+                                            'processing' => 'Đã xác nhận',
+                                            'ready_to_pick' => 'Chờ lấy hàng',
+                                            'shipping' => 'Đang giao hàng',
+                                            'completed' => 'Đã giao',
+                                            'cancelled' => 'Đã hủy',
+                                        ];
+                                        $badgeClass = $statusColors[$tx->order->status] ?? 'bg-slate-100 text-slate-800';
+                                        $label = $statusLabels[$tx->order->status] ?? ucfirst($tx->order->status);
+                                    @endphp
+                                    <div class="flex items-center gap-1.5" title="Trạng thái đơn hàng">
+                                        <i class="bi bi-box-seam text-slate-400"></i>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium {{ $badgeClass }}">
+                                            {{ $label }}
+                                        </span>
+                                    </div>
+                                @endif
+                                
+                                <div class="flex items-center gap-1.5" title="Trạng thái đối soát / giao dịch">
+                                    <i class="bi bi-cash-coin text-slate-400"></i>
+                                    @if($tx->status === 'success')
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">
+                                            <span class="material-symbols-outlined text-[15px] leading-none text-emerald-600">check_circle</span> Thành công
+                                        </span>
+                                    @elseif($tx->status === 'pending')
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800">
+                                            <span class="material-symbols-outlined text-[15px] leading-none text-amber-500">hourglass_top</span> Chờ thanh toán
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-rose-50 text-rose-700 border border-rose-200/80 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800">
+                                            <span class="material-symbols-outlined text-[15px] leading-none text-rose-600">cancel</span> Thất bại / Hủy
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
                         </td>
 
                         <td class="px-4 py-3 text-slate-500 text-[11px]">

@@ -80,6 +80,8 @@ Route::prefix('payment/momo')->name('momo.')->group(function () {
 // Product Detail Route
 Route::get('/products/{slug}', [Client\ProductController::class, 'show'])->name('products.show');
 Route::get('/danh-muc/{slug}', [Client\CategoryController::class, 'show'])->name('categories.show');
+Route::get('/tim-kiem', [Client\HomeController::class, 'search'])->name('search');
+Route::get('/api/search', [Client\HomeController::class, 'apiSearch'])->name('api.search');
 
 Route::middleware('auth')->group(function () {
     // Chat Routes (phía khách hàng)
@@ -130,6 +132,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     
     // Quản lý Đơn hàng (Orders)
     Route::get('orders', [Admin\OrderController::class, 'index'])->name('orders.index');
+    Route::post('orders/bulk-action', [Admin\OrderController::class, 'bulkAction'])->name('orders.bulk_action');
+    Route::post('orders/bulk-print', [Admin\OrderController::class, 'bulkPrint'])->name('orders.bulk_print');
     Route::get('orders/{order}', [Admin\OrderController::class, 'show'])->name('orders.show');
     Route::post('orders/{order}/sync-ghn', [Admin\OrderController::class, 'syncGhnStatus'])->name('orders.sync_ghn');
     Route::post('orders/{order}/confirm-ghn', [Admin\OrderController::class, 'confirmAndCreateGhn'])->name('orders.confirm_ghn');

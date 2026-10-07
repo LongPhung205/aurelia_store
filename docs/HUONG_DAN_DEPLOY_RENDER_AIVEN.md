@@ -130,9 +130,19 @@ Chuyển sang mục **Environment Variables**, thêm các biến sau:
 | `PAYOS_CLIENT_ID` | `...` | Mã Client PayOS |
 | `PAYOS_API_KEY` | `...` | API Key PayOS |
 | `PAYOS_CHECKSUM_KEY` | `...` | Checksum Key PayOS |
-| `GHN_API_TOKEN` | `...` | Token Giao Hàng Nhanh |
+| `GHN_TOKEN` | `...` | Token Giao Hàng Nhanh |
 | `GHN_SHOP_ID` | `...` | Shop ID Giao Hàng Nhanh |
-| `GHN_CLIENT_ID` | `...` | Client ID Giao Hàng Nhanh |
+| `BROADCAST_CONNECTION` | `reverb` | Driver real-time chat Reverb |
+| `REVERB_APP_ID` | `895058` | App ID Reverb |
+| `REVERB_APP_KEY` | `t6g92t9i9z0tnh33ryb2` | App Key Reverb |
+| `REVERB_APP_SECRET` | `aobg30a4r7o55p2q2c9h` | App Secret Reverb |
+| `REVERB_HOST` | `127.0.0.1` | Host Reverb trong container |
+| `REVERB_PORT` | `8080` | Port Reverb trong container |
+| `REVERB_SCHEME` | `http` | Giao thức nội bộ Reverb |
+| `VITE_REVERB_APP_KEY` | `${REVERB_APP_KEY}` | Key gửi cho Client Vite |
+| `VITE_REVERB_HOST` | `<ten-service>.onrender.com` | Domain public Render cấp |
+| `VITE_REVERB_PORT` | `443` | Cổng HTTPS/WSS public |
+| `VITE_REVERB_SCHEME` | `https` | Giao thức WSS public |
 
 *(Tham khảo thêm mẫu đầy đủ tại file [docker/render.env.example](file:///d:/XAMPP/htdocs/aurelia_store/docker/render.env.example))*
 

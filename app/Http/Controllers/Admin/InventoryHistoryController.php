@@ -24,9 +24,38 @@ class InventoryHistoryController extends Controller
         ->with(['reference', 'user'])
         ->groupBy('reference_type', 'reference_id', 'type', 'user_id', 'group_id')
         ->orderBy('created_at', 'desc');
+
+        // Fetch users who have inventory history for the filter
+        $users = \App\Models\User::whereHas('inventoryHistories')->get();
             
+        // Chỉ hiển thị thẻ xuất kho của đơn hàng khi đơn hàng đang ở trạng thái 'shipping' (Đang giao hàng) hoặc 'completed' (Hoàn thành)
+        $visibleFilter = function($q) {
+            $q->where('reference_type', '!=', \App\Models\Order::class)
+              ->orWhereNull('reference_type')
+              ->orWhereExists(function ($sub) {
+                  $sub->select(\DB::raw(1))
+                      ->from('orders')
+                      ->whereColumn('orders.id', 'inventory_histories.reference_id')
+                      ->whereIn('orders.status', ['shipping', 'completed']);
+              });
+        };
+
+        $query->where($visibleFilter);
+
         if ($request->filled('type') && in_array($request->type, ['import', 'export', 'adjustment'])) {
             $query->where('type', $request->type);
+        }
+
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', \Carbon\Carbon::parse($request->date_from)->startOfDay());
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', \Carbon\Carbon::parse($request->date_to)->endOfDay());
         }
 
         if ($request->filled('sku')) {
@@ -38,10 +67,10 @@ class InventoryHistoryController extends Controller
         $histories = $query->paginate(20)->appends($request->all());
 
         $counts = [
-            'all' => InventoryHistory::count(),
-            'import' => InventoryHistory::where('type', 'import')->count(),
-            'export' => InventoryHistory::where('type', 'export')->count(),
-            'adjustment' => InventoryHistory::where('type', 'adjustment')->count(),
+            'all' => InventoryHistory::where($visibleFilter)->count(),
+            'import' => InventoryHistory::where('type', 'import')->where($visibleFilter)->count(),
+            'export' => InventoryHistory::where('type', 'export')->where($visibleFilter)->count(),
+            'adjustment' => InventoryHistory::where('type', 'adjustment')->where($visibleFilter)->count(),
         ];
 
         foreach ($histories as $history) {
@@ -64,7 +93,7 @@ class InventoryHistoryController extends Controller
             }
         }
 
-        return view('admin.inventory_history.index', compact('histories', 'counts'));
+        return view('admin.inventory_history.index', compact('histories', 'counts', 'users'));
     }
 
     public function details(Request $request)

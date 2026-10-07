@@ -79,12 +79,12 @@
             </div>
 
             {{-- Tab filter --}}
-            <div class="flex gap-1 bg-slate-100 dark:bg-slate-700 rounded-lg p-1 text-center">
-                <button class="flex-1 text-xs py-1.5 px-2 rounded-md font-semibold bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-300 shadow-sm">
-                    Hộp thư ({{ $conversations->count() }})
+            <div class="flex gap-1 bg-slate-100 dark:bg-slate-700 rounded-lg p-1 text-center" id="conv-tabs">
+                <button type="button" data-tab="open" class="flex-1 text-xs py-1.5 px-2 rounded-md font-semibold bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-300 shadow-sm transition-all">
+                    Hộp thư ({{ $conversations->where('status', 'open')->count() }})
                 </button>
-                <button class="flex-1 text-xs py-1.5 px-2 rounded-md font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white transition-all">
-                    Đã đóng
+                <button type="button" data-tab="closed" class="flex-1 text-xs py-1.5 px-2 rounded-md font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white transition-all">
+                    Đã đóng ({{ $conversations->where('status', 'closed')->count() }})
                 </button>
             </div>
 
@@ -110,7 +110,7 @@
                 @endphp
                 <a href="{{ route('admin.chat.index', ['conversation_id' => $conv->id]) }}"
                    class="conv-item flex items-center gap-3 px-4 py-3.5 border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors {{ $isActive ? 'active' : '' }}"
-                   data-conv-id="{{ $conv->id }}">
+                   data-conv-id="{{ $conv->id }}" data-status="{{ $conv->status }}">
 
                     {{-- Avatar --}}
                     <div class="relative shrink-0">
@@ -575,18 +575,44 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
-    // ── Tìm kiếm conversation ──
+    // ── Tìm kiếm và Lọc (Tab) conversation ──
     const searchInput = document.getElementById('search-conversations');
-    if (searchInput) {
-        searchInput.addEventListener('input', function () {
-            const q = this.value.toLowerCase();
-            document.querySelectorAll('.conv-item').forEach(item => {
-                const name = item.querySelector('span.font-semibold')?.textContent.toLowerCase() ?? '';
-                const preview = item.querySelector('p.text-xs')?.textContent.toLowerCase() ?? '';
-                item.style.display = (name.includes(q) || preview.includes(q)) ? '' : 'none';
+    const tabButtons = document.querySelectorAll('#conv-tabs button');
+    let currentTab = 'open';
+
+    function filterConversations() {
+        const q = searchInput ? searchInput.value.toLowerCase() : '';
+        document.querySelectorAll('.conv-item').forEach(item => {
+            const status = item.dataset.status;
+            const name = item.querySelector('span.font-semibold')?.textContent.toLowerCase() ?? '';
+            const preview = item.querySelector('p.text-xs')?.textContent.toLowerCase() ?? '';
+            
+            const matchStatus = (status === currentTab);
+            const matchSearch = name.includes(q) || preview.includes(q);
+            
+            item.style.display = (matchStatus && matchSearch) ? '' : 'none';
+        });
+    }
+
+    if (tabButtons) {
+        tabButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                tabButtons.forEach(b => {
+                    b.className = 'flex-1 text-xs py-1.5 px-2 rounded-md font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white transition-all';
+                });
+                this.className = 'flex-1 text-xs py-1.5 px-2 rounded-md font-semibold bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-300 shadow-sm transition-all';
+                currentTab = this.dataset.tab;
+                filterConversations();
             });
         });
     }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', filterConversations);
+    }
+    
+    // Khởi chạy lọc lần đầu
+    filterConversations();
 });
 </script>
 @endpush

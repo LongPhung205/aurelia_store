@@ -50,12 +50,12 @@ fi
 echo "[ENTRYPOINT] Ensuring directory permissions for storage and bootstrap/cache..."
 mkdir -p /var/www/html/storage/framework/sessions
 mkdir -p /var/www/html/storage/framework/views
-mkdir -p /var/www/html/storage/framework/cache
+mkdir -p /var/www/html/storage/framework/cache/data
 mkdir -p /var/www/html/storage/logs
 mkdir -p /var/www/html/bootstrap/cache
 
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # 4. Storage Link
 echo "[ENTRYPOINT] Linking storage directory..."
@@ -94,6 +94,10 @@ nginx -t
 echo "[ENTRYPOINT] Checking PHP-FPM configuration..."
 php-fpm -t
 
+# Re-ensure ownership and permissions after root artisan tasks
+chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
+
 # 8. Start Services
 echo "[ENTRYPOINT] Starting PHP-FPM..."
 php-fpm -y /usr/local/etc/php-fpm.conf -R &
@@ -103,10 +107,31 @@ echo "[ENTRYPOINT] Starting Nginx on port ${PORT}..."
 nginx -g 'daemon off;' &
 NGINX_PID=$!
 
+echo "[ENTRYPOINT] Starting Laravel Queue Worker (OTP mails, order notifications)..."
+php artisan queue:restart || true
+php artisan queue:work database --sleep=3 --tries=3 --max-time=3600 --memory=128 &
+QUEUE_PID=$!
+
+echo "[ENTRYPOINT] Starting Laravel Reverb WebSocket Server on port 8080..."
+php artisan reverb:start --host=127.0.0.1 --port=8080 &
+REVERB_PID=$!
+
+echo "[ENTRYPOINT] Starting Scheduler loop (unpaid order auto-cancellation)..."
+(
+    while true; do
+        php artisan schedule:run --no-interaction --quiet || true
+        sleep 60
+    done
+) &
+SCHEDULER_PID=$!
+
 terminate() {
     echo "[ENTRYPOINT] Termination signal received. Shutting down gracefully..."
     kill -TERM "$NGINX_PID" 2>/dev/null || true
     kill -TERM "$PHP_FPM_PID" 2>/dev/null || true
+    kill -TERM "$QUEUE_PID" 2>/dev/null || true
+    kill -TERM "$REVERB_PID" 2>/dev/null || true
+    kill -TERM "$SCHEDULER_PID" 2>/dev/null || true
     wait "$NGINX_PID" 2>/dev/null || true
     wait "$PHP_FPM_PID" 2>/dev/null || true
     echo "[ENTRYPOINT] Shutdown complete."
@@ -118,8 +143,18 @@ trap terminate TERM INT QUIT
 echo "[ENTRYPOINT] Aurelia Store is ready and listening on port ${PORT}."
 
 while kill -0 "$PHP_FPM_PID" 2>/dev/null && kill -0 "$NGINX_PID" 2>/dev/null; do
-    sleep 2
+    if ! kill -0 "$QUEUE_PID" 2>/dev/null; then
+        echo "[ENTRYPOINT] Warning: Queue worker exited, restarting..."
+        php artisan queue:work database --sleep=3 --tries=3 --max-time=3600 --memory=128 &
+        QUEUE_PID=$!
+    fi
+    if ! kill -0 "$REVERB_PID" 2>/dev/null; then
+        echo "[ENTRYPOINT] Warning: Reverb server exited, restarting..."
+        php artisan reverb:start --host=127.0.0.1 --port=8080 &
+        REVERB_PID=$!
+    fi
+    sleep 3
 done
 
-echo "[ENTRYPOINT] One of the background processes terminated. Exiting container..."
+echo "[ENTRYPOINT] Core web processes terminated. Exiting container..."
 terminate

@@ -87,7 +87,11 @@ class AdminChatController extends Controller
         // Cập nhật thời gian conversation để sort lên đầu
         $conversation->touch();
 
-        broadcast(new MessageSent($message->load('user')))->toOthers();
+        try {
+            broadcast(new MessageSent($message->load('user')))->toOthers();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('AdminChatController broadcast error: ' . $e->getMessage());
+        }
 
         return response()->json([
             'status'  => 'success',

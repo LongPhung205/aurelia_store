@@ -52,11 +52,11 @@ return [
     ],
 
     'ghn' => [
-        'api_url' => env('GHN_API_URL', 'https://dev-online-gateway.ghn.vn/shiip/public-api'),
-        'token' => env('GHN_TOKEN', '967614f9-688b-11f1-a973-aee5264794df'),
-        'shop_id' => env('GHN_SHOP_ID', '200696'),
-        'from_district_id' => env('GHN_FROM_DISTRICT_ID', '1482'),
-        'from_ward_code' => env('GHN_FROM_WARD_CODE', '1A0607'),
+        'api_url' => env('GHN_API_URL', 'https://online-gateway.ghn.vn/shiip/public-api'),
+        'token' => env('GHN_TOKEN'),
+        'shop_id' => env('GHN_SHOP_ID'),
+        'from_district_id' => env('GHN_FROM_DISTRICT_ID'),
+        'from_ward_code' => env('GHN_FROM_WARD_CODE'),
     ],
 
 ];

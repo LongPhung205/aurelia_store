@@ -2,57 +2,57 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Mail\RegistrationOtpMail;
 use App\Models\User;
-use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class EmailVerificationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_email_verification_screen_can_be_rendered(): void
+    public function test_user_is_marked_verified_upon_successful_otp_registration(): void
+    {
+        $email = 'verify_test@example.com';
+        $otp = '654321';
+        Cache::put('otp_'.$email, $otp, now()->addMinutes(5));
+
+        $response = $this->post('/register', [
+            'name' => 'Verify Test User',
+            'email' => $email,
+            'password' => 'password',
+            'password_confirmation' => 'password',
+            'otp_code' => $otp,
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $user = User::where('email', $email)->firstOrFail();
+        $this->assertTrue($user->hasVerifiedEmail());
+        $this->assertNotNull($user->email_verified_at);
+    }
+
+    public function test_unverified_user_has_not_verified_email(): void
     {
         $user = User::factory()->unverified()->create();
 
-        $response = $this->actingAs($user)->get('/verify-email');
+        $this->assertFalse($user->hasVerifiedEmail());
+        $this->assertNull($user->email_verified_at);
+    }
+
+    public function test_registration_otp_email_is_sent_for_verification(): void
+    {
+        Mail::fake();
+
+        $response = $this->postJson('/register/send-otp', [
+            'email' => 'otp_verify@example.com',
+        ]);
 
         $response->assertStatus(200);
-    }
 
-    public function test_email_can_be_verified(): void
-    {
-        $user = User::factory()->unverified()->create();
-
-        Event::fake();
-
-        $verificationUrl = URL::temporarySignedRoute(
-            'verification.verify',
-            now()->addMinutes(60),
-            ['id' => $user->id, 'hash' => sha1($user->email)]
-        );
-
-        $response = $this->actingAs($user)->get($verificationUrl);
-
-        Event::assertDispatched(Verified::class);
-        $this->assertTrue($user->fresh()->hasVerifiedEmail());
-        $response->assertRedirect(route('dashboard', absolute: false).'?verified=1');
-    }
-
-    public function test_email_is_not_verified_with_invalid_hash(): void
-    {
-        $user = User::factory()->unverified()->create();
-
-        $verificationUrl = URL::temporarySignedRoute(
-            'verification.verify',
-            now()->addMinutes(60),
-            ['id' => $user->id, 'hash' => sha1('wrong-email')]
-        );
-
-        $this->actingAs($user)->get($verificationUrl);
-
-        $this->assertFalse($user->fresh()->hasVerifiedEmail());
+        Mail::assertSent(RegistrationOtpMail::class, function ($mail) {
+            return ! empty($mail->otp);
+        });
     }
 }

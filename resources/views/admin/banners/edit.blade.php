@@ -34,6 +34,26 @@
                     <input type="text" id="title" name="title" value="{{ old('title', $banner->title) }}" class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-slate-700 dark:border-slate-600 dark:placeholder-slate-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Nhập tên chiến dịch/sự kiện...">
                 </div>
 
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="type" class="block mb-2 text-sm font-medium text-slate-900 dark:text-white">Loại Banner</label>
+                        <select id="type" name="type" class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-slate-700 dark:border-slate-600 dark:text-white" onchange="toggleCategorySelect()">
+                            <option value="home_slider" {{ old('type', $banner->type) == 'home_slider' ? 'selected' : '' }}>Home Slider</option>
+                            <option value="category_header" {{ old('type', $banner->type) == 'category_header' ? 'selected' : '' }}>Banner Danh Mục</option>
+                        </select>
+                    </div>
+
+                    <div id="category_select_wrapper" style="display: {{ old('type', $banner->type) == 'category_header' ? 'block' : 'none' }};">
+                        <label for="category_id" class="block mb-2 text-sm font-medium text-slate-900 dark:text-white">Danh Mục Áp Dụng</label>
+                        <select id="category_id" name="category_id" class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                            <option value="">Tất cả danh mục (Banner chung)</option>
+                            @foreach($categoryTree as $cat)
+                                <option value="{{ $cat['id'] }}" {{ old('category_id', $banner->category_id) == $cat['id'] ? 'selected' : '' }}>{{ $cat['name'] }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
                 <div>
                     <label for="link" class="block mb-2 text-sm font-medium text-slate-900 dark:text-white">Đường dẫn khi click (Tùy chọn)</label>
                     <input type="text" id="link" name="link" value="{{ old('link', $banner->link) }}" class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-slate-700 dark:border-slate-600 dark:placeholder-slate-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="https://...">
@@ -122,6 +142,22 @@
         uploadContainer.classList.remove('hidden');
         previewContainer.classList.add('hidden');
         imagePreview.src = '#';
+    });
+
+    function toggleCategorySelect() {
+        const typeStr = document.getElementById('type').value;
+        const wrapper = document.getElementById('category_select_wrapper');
+        if (typeStr === 'category_header') {
+            wrapper.style.display = 'block';
+        } else {
+            wrapper.style.display = 'none';
+            document.getElementById('category_id').value = '';
+        }
+    }
+    
+    // Run on load to set correct initial state
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleCategorySelect();
     });
 </script>
 @endpush

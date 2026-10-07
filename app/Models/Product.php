@@ -60,7 +60,7 @@ class Product extends Model
 
     public function getAverageRatingAttribute()
     {
-        return $this->reviews()->where('is_approved', true)->avg('rating') ?: 0;
+        return $this->reviews()->where('is_approved', true)->avg('rating') ?: 5;
     }
 
     public function getReviewCountAttribute()
