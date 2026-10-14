@@ -73,7 +73,9 @@
                     @if($product->variants->max('sale_price'))
                         <span class="bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">SALE</span>
                     @endif
-                    <span class="bg-black text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">NEW</span>
+                    @if($product->created_at->greaterThan(now()->subDays(30)))
+                        <span class="bg-black text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">NEW</span>
+                    @endif
                 </div>
                 
                 <img :src="activeImage" :alt="'{{ $product->name }}'" class="w-full h-full object-cover transition-opacity duration-300" id="main-image">
