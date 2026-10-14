@@ -198,7 +198,9 @@ class PayOSController extends Controller
 
                 if ($transaction) {
                     $transaction->update([
-                        'status' => 'success',
+                        'status'        => 'success',
+                        'reconciled_at' => now(),
+                        'note'          => 'Tự động đối soát qua PayOS Webhook',
                         'response_data' => $webhookData,
                     ]);
                 }

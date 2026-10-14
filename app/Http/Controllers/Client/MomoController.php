@@ -145,9 +145,11 @@ class MomoController extends Controller
     {
         DB::transaction(function () use ($order, $transaction, $responseData) {
             $transaction->update([
-                'status' => 'success',
+                'status'         => 'success',
                 'transaction_id' => $responseData['transId'] ?? $transaction->transaction_id,
-                'response_data' => $responseData
+                'reconciled_at'  => now(),
+                'note'           => 'Tự động đối soát qua MoMo IPN',
+                'response_data'  => $responseData,
             ]);
 
             if ($order->payment_status !== 'paid') {
