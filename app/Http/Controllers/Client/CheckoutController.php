@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\Coupon;
+use App\Models\FlashSaleItem;
 use App\Models\Order;
 use App\Models\InventoryHistory;
 use App\Models\PaymentTransaction;
@@ -240,6 +241,20 @@ class CheckoutController extends Controller
                     'user_id' => auth()->id(),
                     'note' => 'Xuất kho cho đơn hàng ORD-' . $order->id,
                 ]);
+
+                // Cộng dồn sold_quantity vào Flash Sale item nếu sản phẩm đang trong flash sale
+                $flashSaleItem = FlashSaleItem::where('product_id', $product->id)
+                    ->whereHas('flashSale', function ($q) {
+                        $q->where('is_active', true)
+                          ->where('start_time', '<=', now())
+                          ->where('end_time', '>=', now());
+                    })
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($flashSaleItem) {
+                    $flashSaleItem->increment('sold_quantity', $item->quantity);
+                }
             }
 
             // Clear only selected items from cart
