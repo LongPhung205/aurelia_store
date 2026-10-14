@@ -92,7 +92,7 @@ class OrderController extends Controller
         return redirect()->back()->with('error', 'Không thể đồng bộ với GHN lúc này.');
     }
 
-    public function updateStatus(UpdateOrderStatusRequest $request, Order $order, InventoryService $inventoryService)
+    public function updateStatus(UpdateOrderStatusRequest $request, Order $order, InventoryService $inventoryService, GhnService $ghnService)
     {
         $newStatus = $request->validated()['status'];
 
@@ -117,7 +117,7 @@ class OrderController extends Controller
                 } elseif ($newStatus === 'cancelled') {
                     $inventoryService->restockForOrder($order);
                 }
-                
+
                 $order->update(['status' => $newStatus]);
 
                 // Nếu chuyển sang completed thì tự động cập nhật thanh toán
@@ -125,6 +125,24 @@ class OrderController extends Controller
                     $order->update(['payment_status' => 'paid']);
                 }
             });
+
+            // Tự động tạo đơn GHN khi chuyển sang "Đã chuẩn bị hàng"
+            if ($newStatus === 'ready_to_pick' && !$order->shipping_order_code) {
+                $order->load('items'); // Đảm bảo items được load
+                $ghnResponse = $ghnService->createOrder($this->buildGhnPayload($order));
+
+                if ($ghnResponse['success']) {
+                    $order->update([
+                        'shipping_order_code' => $ghnResponse['order_code'],
+                        'shipping_status'     => 'ready_to_pick',
+                    ]);
+                    return redirect()->back()->with('success', 'Đã cập nhật trạng thái và tạo vận đơn GHN: ' . $ghnResponse['order_code']);
+                }
+
+                // GHN thất bại nhưng trạng thái đã đổi thành công → cảnh báo thay vì lỗi
+                \Illuminate\Support\Facades\Log::error('Auto GHN failed for order ' . $order->id . ': ' . $ghnResponse['message']);
+                return redirect()->back()->with('warning', 'Đã cập nhật trạng thái nhưng tạo đơn GHN thất bại: ' . $ghnResponse['message']);
+            }
 
             return redirect()->back()->with('success', 'Đã cập nhật trạng thái đơn hàng thành công.');
         } catch (\Exception $e) {
@@ -138,50 +156,13 @@ class OrderController extends Controller
             return redirect()->back()->with('error', 'Đơn hàng này đã có mã vận đơn.');
         }
 
-        $ghnItems = [];
-        foreach ($order->items as $item) {
-            $ghnItems[] = [
-                'name' => $item->product_name,
-                'quantity' => $item->quantity,
-                'price' => (int)$item->price,
-                'weight' => 200 // Mặc định 200g mỗi sản phẩm
-            ];
-        }
-
-        $ghnOrderData = [
-            'payment_type_id' => 2, // COD
-            'note' => $order->note ?? '',
-            'required_note' => 'CHOXEMHANGKHONGTHU',
-            'return_phone' => '0339999999', // SĐT Shop
-            'return_address' => 'Hà Nội',
-            'return_district_id' => (int)config('services.ghn.from_district_id'),
-            'return_ward_code' => (string)config('services.ghn.from_ward_code'),
-            'client_order_code' => 'ORD-' . $order->id,
-            'to_name' => $order->customer_name,
-            'to_phone' => $order->customer_phone,
-            'to_address' => $order->address,
-            'to_ward_code' => (string)$order->ward_code,
-            'to_district_id' => (int)$order->district_id,
-            'cod_amount' => (int)$order->total_amount,
-            'content' => 'Sản phẩm thời trang',
-            'weight' => count($ghnItems) * 200,
-            'length' => 20,
-            'width' => 20,
-            'height' => 10,
-            'pick_station_id' => null,
-            'insurance_value' => (int)$order->subtotal,
-            'service_id' => 53320,
-            'service_type_id' => 2,
-            'items' => $ghnItems
-        ];
-
-        $ghnResponse = $ghnService->createOrder($ghnOrderData);
+        $ghnResponse = $ghnService->createOrder($this->buildGhnPayload($order));
 
         if ($ghnResponse['success']) {
             $order->update([
                 'shipping_order_code' => $ghnResponse['order_code'],
-                'shipping_status' => 'ready_to_pick',
-                'status' => 'ready_to_pick' // Cập nhật sang Đã chuẩn bị hàng
+                'shipping_status'     => 'ready_to_pick',
+                'status'              => 'ready_to_pick',
             ]);
             return redirect()->back()->with('success', 'Đã xác nhận đơn và tạo mã vận đơn GHN: ' . $ghnResponse['order_code']);
         }
@@ -212,48 +193,25 @@ class OrderController extends Controller
                     elseif ($action === 'ready_to_pick') {
                         if (!in_array($order->status, ['shipping', 'completed', 'cancelled'])) {
                             $order->update(['status' => 'ready_to_pick']);
+                            if (!$order->shipping_order_code) {
+                                $ghnResponse = $ghnService->createOrder($this->buildGhnPayload($order));
+                                if ($ghnResponse['success']) {
+                                    $order->update([
+                                        'shipping_order_code' => $ghnResponse['order_code'],
+                                        'shipping_status'     => 'ready_to_pick',
+                                    ]);
+                                }
+                            }
                         }
                     } 
                     elseif ($action === 'push_ghn') {
                         if (!$order->shipping_order_code) {
-                            $ghnItems = [];
-                            foreach ($order->items as $item) {
-                                $ghnItems[] = [
-                                    'name' => $item->product_name,
-                                    'quantity' => $item->quantity,
-                                    'price' => (int)$item->price,
-                                    'weight' => 200
-                                ];
-                            }
-                            $ghnOrderData = [
-                                'payment_type_id' => 2,
-                                'required_note' => 'CHOXEMHANGKHONGTHU',
-                                'return_phone' => '0339999999',
-                                'return_address' => 'Hà Nội',
-                                'return_district_id' => (int)config('services.ghn.from_district_id'),
-                                'return_ward_code' => (string)config('services.ghn.from_ward_code'),
-                                'client_order_code' => 'ORD-' . $order->id,
-                                'to_name' => $order->customer_name,
-                                'to_phone' => $order->customer_phone,
-                                'to_address' => $order->address,
-                                'to_ward_code' => (string)$order->ward_code,
-                                'to_district_id' => (int)$order->district_id,
-                                'cod_amount' => (int)$order->total_amount,
-                                'content' => 'Sản phẩm thời trang',
-                                'weight' => count($ghnItems) * 200,
-                                'length' => 20,
-                                'width' => 20,
-                                'height' => 10,
-                                'service_id' => 53320,
-                                'service_type_id' => 2,
-                                'items' => $ghnItems
-                            ];
-                            $ghnResponse = $ghnService->createOrder($ghnOrderData);
+                            $ghnResponse = $ghnService->createOrder($this->buildGhnPayload($order));
                             if ($ghnResponse['success']) {
                                 $order->update([
                                     'shipping_order_code' => $ghnResponse['order_code'],
-                                    'shipping_status' => 'ready_to_pick',
-                                    'status' => 'ready_to_pick'
+                                    'shipping_status'     => 'ready_to_pick',
+                                    'status'              => 'ready_to_pick',
                                 ]);
                             } else {
                                 throw new \Exception('Lỗi GHN đơn ' . $order->id . ': ' . $ghnResponse['message']);
@@ -310,5 +268,48 @@ class OrderController extends Controller
         }
 
         return view('admin.orders.bulk_print', compact('orders'));
+    }
+
+    /**
+     * Xây dựng payload gửi lên GHN API từ dữ liệu đơn hàng.
+     * Tập trung logic ở 1 nơi, tránh lặp code ở confirmAndCreateGhn, updateStatus, bulkAction.
+     */
+    private function buildGhnPayload(Order $order): array
+    {
+        $order->loadMissing('items');
+
+        $ghnItems = $order->items->map(fn ($item) => [
+            'name'     => $item->product_name,
+            'quantity' => $item->quantity,
+            'price'    => (int) $item->price,
+            'weight'   => 200,
+        ])->values()->all();
+
+        return [
+            'payment_type_id'   => 2, // Người nhận trả phí (COD)
+            'note'              => $order->note ?? '',
+            'required_note'     => 'CHOXEMHANGKHONGTHU',
+            'return_phone'      => '0339999999',
+            'return_address'    => 'Hà Nội',
+            'return_district_id'=> (int) config('services.ghn.from_district_id'),
+            'return_ward_code'  => (string) config('services.ghn.from_ward_code'),
+            'client_order_code' => 'ORD-' . $order->id,
+            'to_name'           => $order->customer_name,
+            'to_phone'          => $order->customer_phone,
+            'to_address'        => $order->address,
+            'to_ward_code'      => (string) $order->ward_code,
+            'to_district_id'    => (int) $order->district_id,
+            'cod_amount'        => (int) $order->total_amount,
+            'content'           => 'Sản phẩm thời trang',
+            'weight'            => count($ghnItems) * 200,
+            'length'            => 20,
+            'width'             => 20,
+            'height'            => 10,
+            'pick_station_id'   => null,
+            'insurance_value'   => (int) $order->subtotal,
+            'service_id'        => 53320,
+            'service_type_id'   => 2,
+            'items'             => $ghnItems,
+        ];
     }
 }
